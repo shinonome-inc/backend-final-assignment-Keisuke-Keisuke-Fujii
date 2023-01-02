@@ -1,15 +1,56 @@
 from django.test import TestCase
+from django.urls import reverse
+from django.contrib.auth import SESSION_KEY, get_user_model
+
+User = get_user_model()
 
 
-class TestSignUpView(TestCase):
+class TestSignupView(TestCase):
+    def setUp(self):
+        self.url = reverse("accounts:signup")
+
     def test_success_get(self):
-        pass
+        response = self.client.get(self.url)
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, "accounts/signup.html")
 
     def test_success_post(self):
-        pass
+        data = {
+            "username": "testuser",
+            "email": "test@test.com",
+            "password1": "testpassword",
+            "password2": "testpassword",
+        }
+        response = self.client.post(self.url, data)
+
+        self.assertRedirects(
+            response,
+            reverse("tweets:home"),
+            status_code=302,
+            target_status_code=200,
+        )
+        self.assertTrue(User.objects.filter(username=data["username"]).exists())
+        self.assertIn(SESSION_KEY, self.client.session)
 
     def test_failure_post_with_empty_form(self):
-        pass
+        data = {
+            "username": "",
+            "email": "test@test.com",
+            "password1": "testpassword",
+            "password2": "testpassword",
+        }
+        response = self.client.post(self.url, data)
+        form = response.context["form"]
+
+        self.assertEqual(response.status_code, 200)
+        self.assertFalse(User.objects.filter(username=data["username"]).exists())
+        self.assertFalse(form.is_valid())
+        self.assertIn("このフィールドは必須です。", form.errors["username"])
+
+        print(response.context)
+        print(response.context["form"])
+
+        print(form.errors)
 
     def test_failure_post_with_empty_username(self):
         pass
