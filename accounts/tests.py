@@ -47,9 +47,6 @@ class TestSignupView(TestCase):
         self.assertFalse(form.is_valid())
         self.assertIn("このフィールドは必須です。", form.errors["username"])
 
-        print(response.context)
-        print(response.context["form"])
-
         print(form.errors)
 
     def test_failure_post_with_empty_username(self):
