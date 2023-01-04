@@ -1,6 +1,6 @@
 from django.shortcuts import render
 
-from django.contrib.auth import authenticate, login
+from django.contrib.auth import login  # authenticate
 from django.urls import reverse_lazy
 from django.views.generic import CreateView
 
@@ -14,13 +14,6 @@ class SignupView(CreateView):
 
     def form_valid(self, form):
         response = super().form_valid(form)
-        user = form.save()
-        """ 
-        user = authenticate(self.request, userame=username, password=password 
-        であったが
-        フォームを保存するときにすでにユーザーを取得しているので、
-        login()を呼び出すときにすでにバックエンドを提供しているため、
-        authenticateを呼び出す必要はない
-        """
-        login(self.request, user, backend="django.contrib.auth.backends.ModelBackend")
+        user = self.object
+        login(self.request, user)
         return response
