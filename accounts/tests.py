@@ -11,7 +11,9 @@ class TestSignupView(TestCase):
         self.url = reverse("accounts:signup")
 
     def test_success_get(self):
+        # ユーザーがaccounts/signup/ のURLに訪れたという動作
         response = self.client.get(self.url)
+
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, "accounts/signup.html")
 
@@ -22,7 +24,9 @@ class TestSignupView(TestCase):
             "password1": "testpassword",
             "password2": "testpassword",
         }
+        # ↓ ユーザーがフォームにデータを打ち込んでユーザー登録ボタンを押した時の操作
         response = self.client.post(self.url, data)
+        # assertRedirectsとは何か？
         self.assertRedirects(
             response,
             reverse(settings.LOGIN_REDIRECT_URL),
@@ -30,6 +34,11 @@ class TestSignupView(TestCase):
             target_status_code=200,
         )
         self.assertTrue(
+            # モデル（user）.objects（モデルマネージャ（モデルを操作するもの））.モデルメソッド
+            # モデルを操作（filterなど）する時にはobjectsが必要
+            # モデルマネージャでモデルを操作した後はクエリセットかモデルインスタンスが返される
+            # クエリセットが返された場合は（クエリセット）.モデルメソッドで後の操作できる．
+            # モデルインスタンスなら（モデルインスタンス）.objects（モデルマネージャ（モデルを操作するもの））.モデルメソッド
             User.objects.filter(
                 username=data["username"],
             ).exists()
@@ -44,18 +53,23 @@ class TestSignupView(TestCase):
             "password2": "",
         }
         response = self.client.post(self.url, form_empty_data)
+        # ↑ responseで表示されているhtml等の情報を全ていれる.dict型.
         form = response.context["form"]
+        # ↑ response.contextはdict型でデータが入っており、その中のformを取ってきたい.
+        # よってキーにformを指定することでformを取得.
+        # responseで表示されている全てのhtml等の情報の中からform情報(キー)を取得.
+        # ここのformはSignupViewのform_classに代入した SignupForm のインスタンスにあたる(モデルインスタンス).
 
         self.assertEqual(response.status_code, 200)
         user_record_count = User.objects.all().count()
-        # Userテーブルのレコードは増えているか確認している
+        # 以下でUserテーブルのレコードは増えているか確認.
         self.assertEqual(user_record_count, User.objects.all().count())
         self.assertFalse(form.is_valid())
-        self.assertEqual(form.errors["username"][0], "このフィールドは必須です。")
-        self.assertEqual(form.errors["email"][0], "このフィールドは必須です。")
-        self.assertEqual(form.errors["password1"][0], "このフィールドは必須です。")
-        self.assertEqual(form.errors["password2"][0], "このフィールドは必須です。")
-        # ここをasserInでやるにはどうしたらよいか
+        self.assertIn("このフィールドは必須です。", form.errors["username"])
+        self.assertIn("このフィールドは必須です。", form.errors["email"])
+        self.assertIn("このフィールドは必須です。", form.errors["password1"])
+        self.assertIn("このフィールドは必須です。", form.errors["password2"])
+        # ここのasserInをきれいにしたい
 
     def test_failure_post_with_empty_username(self):
         username_empty_data = {
@@ -68,11 +82,9 @@ class TestSignupView(TestCase):
         form = response.context["form"]
 
         self.assertEqual(response.status_code, 200)
-        self.assertFalse(
-            User.objects.filter(
-                username=username_empty_data["username"],
-            ).exists()
-        )
+        user_record_count = User.objects.all().count()
+        # 以下でUserテーブルのレコードは増えているか確認.
+        self.assertEqual(user_record_count, User.objects.all().count())
         self.assertFalse(form.is_valid())
         self.assertIn("このフィールドは必須です。", form.errors["username"])
 
@@ -87,14 +99,30 @@ class TestSignupView(TestCase):
         form = response.context["form"]
 
         self.assertEqual(response.status_code, 200)
-        self.assertFalse(
-            User.objects.filter(username=email_empty_data["email"]).exists()
-        )
+        user_record_count = User.objects.all().count()
+        # 以下でUserテーブルのレコードは増えているか確認.
+        self.assertEqual(user_record_count, User.objects.all().count())
         self.assertFalse(form.is_valid())
         self.assertIn("このフィールドは必須です。", form.errors["email"])
 
     def test_failure_post_with_empty_password(self):
-        pass
+        password_empty_data = {
+            "username": "testuser",
+            "email": "test@test.com",
+            "password1": "",
+            "password2": "",
+        }
+        response = self.client.post(self.url, password_empty_data)
+        form = response.context["form"]
+
+        self.assertEqual(response.status_code, 200)
+        user_record_count = User.objects.all().count()
+        # 以下でUserテーブルのレコードは増えているか確認.
+        self.assertEqual(user_record_count, User.objects.all().count())
+        self.assertFalse(form.is_valid())
+        self.assertIn("このフィールドは必須です。", form.errors["password1"])
+        self.assertIn("このフィールドは必須です。", form.errors["password2"])
+        # ここをasserInでやるにはどうしたらよいか
 
     def test_failure_post_with_duplicated_user(self):
         pass

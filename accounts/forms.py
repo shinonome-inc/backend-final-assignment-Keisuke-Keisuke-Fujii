@@ -6,6 +6,7 @@ CustomUser = get_user_model()
 
 class SignupForm(UserCreationForm):
     class Meta:
+        # UserCreationFormを継承しmodel変数とfields変数を上書き．
         model = CustomUser  # model = get_user_model() は NG
         fields = ("username", "email")
 
