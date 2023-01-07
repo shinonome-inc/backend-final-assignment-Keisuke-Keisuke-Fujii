@@ -123,7 +123,8 @@ class TestSignupView(TestCase):
         self.assertFalse(form.is_valid())
         self.assertIn("このフィールドは必須です。", form.errors["password1"])
         self.assertIn("このフィールドは必須です。", form.errors["password2"])
-        # ここをasserInでやるにはどうしたらよいか
+        # ここをきれいにするにはどうしたらよいか
+        # パスワードの片方のフォームだけ入力された場合どうなるの？
 
     def test_failure_post_with_duplicated_user(self):
         # 既に存在するデータ
@@ -145,23 +146,99 @@ class TestSignupView(TestCase):
         # 増えていないことを確認
         self.assertEqual(user_count, User.objects.all().count())
         form = response.context["form"]
+        self.assertEqual(response.status_code, 200)
         self.assertFalse(form.is_valid())
         self.assertIn("同じユーザー名が既に登録済みです。", form.errors["username"])
 
     def test_failure_post_with_invalid_email(self):
-        pass
+        email_invalid_data = {
+            "username": "testuser",
+            "email": "invalid_email",
+            "password1": "testpassword",
+            "password2": "testpassword",
+        }
+        response = self.client.post(self.url, email_invalid_data)
+        form = response.context["form"]
+        self.assertEqual(response.status_code, 200)
+        user_record_count = User.objects.all().count()
+        # 以下でUserテーブルのレコードは増えているか確認.
+        self.assertEqual(user_record_count, User.objects.all().count())
+        self.assertFalse(form.is_valid())
+        self.assertIn("有効なメールアドレスを入力してください。", form.errors["email"])
 
     def test_failure_post_with_too_short_password(self):
-        pass
+        too_short_password_data = {
+            "username": "testuser",
+            "email": "test@test.com",
+            "password1": "short",
+            "password2": "short",
+        }
+        response = self.client.post(self.url, too_short_password_data)
+        form = response.context["form"]
+        self.assertEqual(response.status_code, 200)
+        user_record_count = User.objects.all().count()
+        # 以下でUserテーブルのレコードは増えているか確認.
+        self.assertEqual(user_record_count, User.objects.all().count())
+        self.assertFalse(form.is_valid())
+        self.assertIn("このパスワードは短すぎます。最低 8 文字以上必要です。", form.errors["password2"])
 
     def test_failure_post_with_password_similar_to_username(self):
-        pass
+        password_similar_to_username_data = {
+            "username": "testuser",
+            "email": "test@test.com",
+            "password1": "testuser1",
+            "password2": "testuser1",
+        }
+        response = self.client.post(
+            self.url,
+            password_similar_to_username_data,
+        )
+        form = response.context["form"]
+        self.assertEqual(response.status_code, 200)
+        user_record_count = User.objects.all().count()
+        # 以下でUserテーブルのレコードは増えているか確認.
+        self.assertEqual(user_record_count, User.objects.all().count())
+        self.assertFalse(form.is_valid())
+        self.assertIn("このパスワードは ユーザー名 と似すぎています。", form.errors["password2"])
+        # パスワードが空白の時はpassword1とpassword2両方でエラーが出ていたのにここはなぜ2だけエラー？
 
     def test_failure_post_with_only_numbers_password(self):
-        pass
+        only_numbers_password_data = {
+            "username": "testuser",
+            "email": "test@test.com",
+            "password1": "875329948",
+            "password2": "875329948",
+        }
+        response = self.client.post(
+            self.url,
+            only_numbers_password_data,
+        )
+        form = response.context["form"]
+        self.assertEqual(response.status_code, 200)
+        user_record_count = User.objects.all().count()
+        # 以下でUserテーブルのレコードは増えているか確認.
+        self.assertEqual(user_record_count, User.objects.all().count())
+        self.assertFalse(form.is_valid())
+        self.assertIn("このパスワードは数字しか使われていません。", form.errors["password2"])
 
     def test_failure_post_with_mismatch_password(self):
-        pass
+        with_mismatch_password_data = {
+            "username": "testuser",
+            "email": "test@test.com",
+            "password1": "fdasjkn2",
+            "password2": "novcian2",
+        }
+        response = self.client.post(
+            self.url,
+            with_mismatch_password_data,
+        )
+        form = response.context["form"]
+        self.assertEqual(response.status_code, 200)
+        user_record_count = User.objects.all().count()
+        # 以下でUserテーブルのレコードは増えているか確認.
+        self.assertEqual(user_record_count, User.objects.all().count())
+        self.assertFalse(form.is_valid())
+        self.assertIn("確認用パスワードが一致しません。", form.errors["password2"])
 
 
 class TestLoginView(TestCase):
