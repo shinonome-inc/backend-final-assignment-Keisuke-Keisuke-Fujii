@@ -24,15 +24,19 @@ class TestSignupView(TestCase):
             "password1": "testpassword",
             "password2": "testpassword",
         }
-        # ↓ ユーザーがフォームにデータを打ち込んでユーザー登録ボタンを押した時の操作
+        """
+        ↓ responseはユーザーがフォームにデータを打ち込んでユーザー登録ボタンを押した時
+        第二引数データdataを持って,第一引数のurlであるself.url（SetUpメソッドで定めたsignup成功時の遷移先url）に
+        遷移する操作を示す
+        """
         response = self.client.post(self.url, data)
-        # assertRedirectsとは何か？
         self.assertRedirects(
-            response,
-            reverse(settings.LOGIN_REDIRECT_URL),
-            status_code=302,
-            target_status_code=200,
+            response,  # responseという操作（インスタンス？）が，
+            reverse(settings.LOGIN_REDIRECT_URL),  # reverse逆引URL(tweets:home)へ
+            status_code=302,  # ちゃんとリダイレクトという動きが行われ
+            target_status_code=200,  # 画面表示がOKである
         )
+        # responseにより登録されたデータが存在していることを確認
         self.assertTrue(
             # モデル（user）.objects（モデルマネージャ（モデルを操作するもの））.モデルメソッド
             # モデルを操作（filterなど）する時にはobjectsが必要
@@ -80,7 +84,6 @@ class TestSignupView(TestCase):
         }
         response = self.client.post(self.url, username_empty_data)
         form = response.context["form"]
-
         self.assertEqual(response.status_code, 200)
         user_record_count = User.objects.all().count()
         # 以下でUserテーブルのレコードは増えているか確認.
@@ -97,7 +100,6 @@ class TestSignupView(TestCase):
         }
         response = self.client.post(self.url, email_empty_data)
         form = response.context["form"]
-
         self.assertEqual(response.status_code, 200)
         user_record_count = User.objects.all().count()
         # 以下でUserテーブルのレコードは増えているか確認.
@@ -114,7 +116,6 @@ class TestSignupView(TestCase):
         }
         response = self.client.post(self.url, password_empty_data)
         form = response.context["form"]
-
         self.assertEqual(response.status_code, 200)
         user_record_count = User.objects.all().count()
         # 以下でUserテーブルのレコードは増えているか確認.
@@ -125,7 +126,27 @@ class TestSignupView(TestCase):
         # ここをasserInでやるにはどうしたらよいか
 
     def test_failure_post_with_duplicated_user(self):
-        pass
+        # 既に存在するデータ
+        existing_user_data = {
+            "username": "testuser",
+            "email": "test@test.com",
+            "password1": "testpassword",
+            "password2": "testpassword",
+        }
+        # userデータ作成操作
+        response = self.client.post(self.url, existing_user_data)
+        self.assertTrue(
+            User.objects.filter(
+                username=existing_user_data["username"],
+            ).exists()
+        )
+        user_count = User.objects.all().count()
+        response = self.client.post(self.url, existing_user_data)
+        # 増えていないことを確認
+        self.assertEqual(user_count, User.objects.all().count())
+        form = response.context["form"]
+        self.assertFalse(form.is_valid())
+        self.assertIn("同じユーザー名が既に登録済みです。", form.errors["username"])
 
     def test_failure_post_with_invalid_email(self):
         pass
