@@ -3,6 +3,7 @@ from django.db import models
 
 
 class CustomUser(AbstractUser):
+    # AbstractUserを継承してモデルをつくり，Emailフィールドのカラムを追加
     email = models.EmailField()
 
 
