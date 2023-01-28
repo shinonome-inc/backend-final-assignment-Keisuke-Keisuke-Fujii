@@ -5,6 +5,10 @@ from django.views.generic import CreateView
 
 from .forms import SignupForm
 
+# SignUpViewではユーザ作成機能，作成されたユーザのログイン機能を実装する
+
+# 汎用ビューの１つであるCreateViewを継承
+
 
 class SignupView(CreateView):
     form_class = SignupForm
@@ -19,7 +23,19 @@ class SignupView(CreateView):
     """
 
     def form_valid(self, form):
-        response = super().form_valid(form)
+        response = super().form_valid(
+            form
+        )  # 2つのform_validを実行．CBV参照．このresponseには返り値であるHttpResponseRedirectが入る
         user = self.object
         login(self.request, user)
-        return response
+        """
+        self.requestの中身はHttpReuqestオブジェクト.第2引数にログインさせたいユーザーインスタンス
+        """
+        return response  # success_urlにリダイレクト
+
+    """
+    formのバリデーション（form.is_valid()）がtrueだった場合に呼ばれるメソッドです。
+    すなわち、formのところで見たように、バリデーションを通ったデータをもとに
+    何かを実装したい時（ここではログイン処理を行う）はform_validメソッドを
+    オーバーライドしていくことになります
+    """

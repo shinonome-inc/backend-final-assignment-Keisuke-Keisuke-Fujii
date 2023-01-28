@@ -55,6 +55,11 @@ MIDDLEWARE = [
 
 ROOT_URLCONF = "mysite.urls"
 
+"""
+template実装時のベストプラクティスはプロジェクトフォルダ直下にtemplatesフォルダを作成し、そこに各アプリと同じ名前のフォルダを作成していくこと
+    そしてsettingsのTEMPLATESを[BASE_DIR / "templates"]に書き変える
+    なぜならデフォルトではdjangoは(app名)/templates/(同じapp名)/template.htmlを読み取るから
+"""
 TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
@@ -130,6 +135,9 @@ STATIC_URL = "static/"
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 AUTH_USER_MODEL = "accounts.CustomUser"
+# AUTH_USER_MODELはカスタマイズしたUserモデルをデフォルトのUserモデルに代わって使用するときにsettings.pyにて指定する
+# この操作によって，デフォルトのUserモデルを上書きしている
+# その後，makemigrationsとmigrateによりユーザモデルをデータベース反映させる
 
 LOGIN_REDIRECT_URL = "tweets:home"
 

@@ -7,15 +7,24 @@ User = get_user_model()
 
 
 class TestSignupView(TestCase):
+    # test用のログインデータ
     def setUp(self):
-        self.url = reverse("accounts:signup")
+        self.url = reverse("accounts:signup")  # アカウントを登録するurlページへの逆引き
 
     def test_success_get(self):
-        # ユーザーがaccounts/signup/ のURLに訪れたという動作
-        response = self.client.get(self.url)
+        # ユーザーがaccounts/signup/ のURLに訪れそのテンプレートhtmlが表示されているかを確認
+        response = self.client.get(self.url)  # accounts/signup/ のURLに訪れる動作
 
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, 200)  # コード200なのを確認
         self.assertTemplateUsed(response, "accounts/signup.html")
+
+    """
+    ユーザーが作成され，ログインできているか確認.
+    1. tweets/homeにリダイレクトすること
+    2. ユーザーが作成されること
+    3. ログイン状態になること
+    を確認する
+    """
 
     def test_success_post(self):
         data = {
@@ -25,7 +34,7 @@ class TestSignupView(TestCase):
             "password2": "testpassword",
         }
         """
-        ↓ responseはユーザーがフォームにデータを打ち込んでユーザー登録ボタンを押した時
+        ↓ responseはユーザーがフォームにデータを打ち込んでユーザー登録ボタンを押した操作
         第二引数データdataを持って,第一引数のurlであるself.url（SetUpメソッドで定めたsignup成功時の遷移先url）に
         遷移する操作を示す
         """
@@ -64,6 +73,7 @@ class TestSignupView(TestCase):
         # よってキーにformを指定することでformを取得.
         # responseで表示されている全てのhtml等の情報の中からform情報(キー)を取得.
         # ここのformはSignupViewのform_classに代入した SignupForm のインスタンスにあたる(モデルインスタンス).
+        # ここで何してるか正直わからない
 
         self.assertEqual(response.status_code, 200)
         # 以下でUserテーブルのレコードは増えているか確認.
@@ -117,7 +127,6 @@ class TestSignupView(TestCase):
         user_record_count = User.objects.all().count()
         response = self.client.post(self.url, password_empty_data)
         form = response.context["form"]
-        user_record_count = User.objects.all().count()
         # 以下でUserテーブルのレコードは増えているか確認.
         self.assertEqual(user_record_count, User.objects.all().count())
         self.assertFalse(form.is_valid())
@@ -134,16 +143,39 @@ class TestSignupView(TestCase):
             "password1": "testpassword",
             "password2": "testpassword",
         }
-        # userデータ作成操作
+
+        new_user_data = {
+            "username": "testuser",
+            "email": "test@test.com",
+            "password1": "testpassword",
+            "password2": "testpassword",
+        }
+
+        # 既に存在するデータとしてexistingを作成操作
         response = self.client.post(self.url, existing_user_data)
         self.assertTrue(
             User.objects.filter(
                 username=existing_user_data["username"],
             ).exists()
         )
+
+        # この時のユーザ数を取得
         user_count = User.objects.all().count()
-        response = self.client.post(self.url, existing_user_data)
-        # 増えていないことを確認
+
+        # existingとまったく同じnewデータを作成
+        response = self.client.post(self.url, new_user_data)
+        self.assertTrue(
+            User.objects.filter(
+                username=new_user_data["username"],
+            ).exists()
+        )
+
+        """
+        ユーザ数が増えていないことを確認.assertEqualの
+        第一引数はexistingのみでユーザ作成したときのユーザ数
+        第二引数はexistingとnewでユーザ作成したときのユーザ数
+        existingとnewは全く同じデータなので引数の中身はどちらも1でTrue.
+        """
         self.assertEqual(user_count, User.objects.all().count())
         form = response.context["form"]
         self.assertEqual(response.status_code, 200)
