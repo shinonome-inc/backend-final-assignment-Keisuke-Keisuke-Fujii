@@ -144,39 +144,18 @@ class TestSignupView(TestCase):
             "password2": "testpassword",
         }
 
-        new_user_data = {
-            "username": "testuser",
-            "email": "test@test.com",
-            "password1": "testpassword",
-            "password2": "testpassword",
-        }
-
-        # 既に存在するデータとしてexistingを作成操作
+        # 既に存在するデータとしてexistingを作成.作成は問題なく可能.
         response = self.client.post(self.url, existing_user_data)
         self.assertTrue(
             User.objects.filter(
                 username=existing_user_data["username"],
             ).exists()
         )
+        # もう一度同じデータでユーザ作成
+        response = self.client.post(self.url, existing_user_data)
 
-        # この時のユーザ数を取得
-        user_count = User.objects.all().count()
-
-        # existingとまったく同じnewデータを作成
-        response = self.client.post(self.url, new_user_data)
-        self.assertTrue(
-            User.objects.filter(
-                username=new_user_data["username"],
-            ).exists()
-        )
-
-        """
-        ユーザ数が増えていないことを確認.assertEqualの
-        第一引数はexistingのみでユーザ作成したときのユーザ数
-        第二引数はexistingとnewでユーザ作成したときのユーザ数
-        existingとnewは全く同じデータなので引数の中身はどちらも1でTrue.
-        """
-        self.assertEqual(user_count, User.objects.all().count())
+        # User.objects.all().count() == 1
+        self.assertEqual(User.objects.all().count(), 1)
         form = response.context["form"]
         self.assertEqual(response.status_code, 200)
         self.assertFalse(form.is_valid())
