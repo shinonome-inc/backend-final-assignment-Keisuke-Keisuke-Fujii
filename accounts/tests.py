@@ -3,56 +3,56 @@ from django.urls import reverse
 from django.contrib.auth import SESSION_KEY, get_user_model
 from django.conf import settings
 
-User = get_user_model()
+CustomUser = get_user_model()
 
 
 class TestSignupView(TestCase):
     # test用のログインデータ
     def setUp(self):
-        self.url = reverse("accounts:signup")  # アカウントを登録するurlページへの逆引き
+        # アカウントを登録するurlページへの逆引き
+        self.url = reverse("accounts:signup")
 
     def test_success_get(self):
-        # ユーザーがaccounts/signup/ のURLに訪れそのテンプレートhtmlが表示されているかを確認
+        """
+        ユーザーがaccounts/signup/ のURLに訪れそのテンプレートhtmlが表示されているかを確認
+        ユーザーが作成され，ログインできているか確認.
+        1. tweets/homeにリダイレクトすること
+        2. ユーザーが作成されること
+        3. ログイン状態になること
+        を確認する
+        """
         response = self.client.get(self.url)  # accounts/signup/ のURLに訪れる動作
 
         self.assertEqual(response.status_code, 200)  # コード200なのを確認
         self.assertTemplateUsed(response, "accounts/signup.html")
 
-    """
-    ユーザーが作成され，ログインできているか確認.
-    1. tweets/homeにリダイレクトすること
-    2. ユーザーが作成されること
-    3. ログイン状態になること
-    を確認する
-    """
-
     def test_success_post(self):
+        """
+        responseはユーザーがフォームにデータを打ち込んでユーザー登録ボタンを押した操作
+        第二引数データdataを持って,第一引数のurlであるself.url（SetUpメソッドで定めたsignup成功時の遷移先url）に
+        遷移する操作を示す
+        """
         data = {
             "username": "testuser",
             "email": "test@test.com",
             "password1": "testpassword",
             "password2": "testpassword",
         }
-        """
-        ↓ responseはユーザーがフォームにデータを打ち込んでユーザー登録ボタンを押した操作
-        第二引数データdataを持って,第一引数のurlであるself.url（SetUpメソッドで定めたsignup成功時の遷移先url）に
-        遷移する操作を示す
-        """
         response = self.client.post(self.url, data)
+
         self.assertRedirects(
             response,  # responseという操作（インスタンス？）が，
-            reverse(settings.LOGIN_REDIRECT_URL),  # reverse逆引URL(tweets:home)へ
+            reverse("tweets:home"),  # reverse逆引URL(tweets:home)へ
             status_code=302,  # ちゃんとリダイレクトという動きが行われ
             target_status_code=200,  # 画面表示がOKである
-        )
-        # responseにより登録されたデータが存在していることを確認
+        )  # responseにより登録されたデータが存在していることを確認
         self.assertTrue(
             # モデル（user）.objects（モデルマネージャ（モデルを操作するもの））.モデルメソッド
             # モデルを操作（filterなど）する時にはobjectsが必要
             # モデルマネージャでモデルを操作した後はクエリセットかモデルインスタンスが返される
             # クエリセットが返された場合は（クエリセット）.モデルメソッドで後の操作できる．
             # モデルインスタンスなら（モデルインスタンス）.objects（モデルマネージャ（モデルを操作するもの））.モデルメソッド
-            User.objects.filter(
+            CustomUser.objects.filter(
                 username=data["username"],
             ).exists()
         )
@@ -65,7 +65,7 @@ class TestSignupView(TestCase):
             "password1": "",
             "password2": "",
         }
-        user_record_count = User.objects.all().count()
+        user_record_count = CustomUser.objects.all().count()
         response = self.client.post(self.url, form_empty_data)
         # ↑ responseで表示されているhtml等の情報を全ていれる.dict型.
         form = response.context["form"]
@@ -76,8 +76,8 @@ class TestSignupView(TestCase):
         # ここで何してるか正直わからない
 
         self.assertEqual(response.status_code, 200)
-        # 以下でUserテーブルのレコードは増えているか確認.
-        self.assertEqual(user_record_count, User.objects.all().count())
+        # 以下でCustomUserテーブルのレコードは増えているか確認.
+        self.assertEqual(user_record_count, CustomUser.objects.all().count())
         self.assertFalse(form.is_valid())
         self.assertIn("このフィールドは必須です。", form.errors["username"])
         self.assertIn("このフィールドは必須です。", form.errors["email"])
@@ -92,12 +92,12 @@ class TestSignupView(TestCase):
             "password1": "testpassword",
             "password2": "testpassword",
         }
-        user_record_count = User.objects.all().count()
+        user_record_count = CustomUser.objects.all().count()
         response = self.client.post(self.url, username_empty_data)
         form = response.context["form"]
         self.assertEqual(response.status_code, 200)
-        # 以下でUserテーブルのレコードは増えているか確認.
-        self.assertEqual(user_record_count, User.objects.all().count())
+        # 以下でCustomUserテーブルのレコードは増えているか確認.
+        self.assertEqual(user_record_count, CustomUser.objects.all().count())
         self.assertFalse(form.is_valid())
         self.assertIn("このフィールドは必須です。", form.errors["username"])
 
@@ -108,12 +108,12 @@ class TestSignupView(TestCase):
             "password1": "testpassword",
             "password2": "testpassword",
         }
-        user_record_count = User.objects.all().count()
+        user_record_count = CustomUser.objects.all().count()
         response = self.client.post(self.url, email_empty_data)
         form = response.context["form"]
         self.assertEqual(response.status_code, 200)
-        # 以下でUserテーブルのレコードは増えているか確認.
-        self.assertEqual(user_record_count, User.objects.all().count())
+        # 以下でCustomUserテーブルのレコードは増えているか確認.
+        self.assertEqual(user_record_count, CustomUser.objects.all().count())
         self.assertFalse(form.is_valid())
         self.assertIn("このフィールドは必須です。", form.errors["email"])
 
@@ -124,11 +124,11 @@ class TestSignupView(TestCase):
             "password1": "",
             "password2": "",
         }
-        user_record_count = User.objects.all().count()
+        user_record_count = CustomUser.objects.all().count()
         response = self.client.post(self.url, password_empty_data)
         form = response.context["form"]
-        # 以下でUserテーブルのレコードは増えているか確認.
-        self.assertEqual(user_record_count, User.objects.all().count())
+        # 以下でCustomUserテーブルのレコードは増えているか確認.
+        self.assertEqual(user_record_count, CustomUser.objects.all().count())
         self.assertFalse(form.is_valid())
         self.assertIn("このフィールドは必須です。", form.errors["password1"])
         self.assertIn("このフィールドは必須です。", form.errors["password2"])
@@ -147,15 +147,15 @@ class TestSignupView(TestCase):
         # 既に存在するデータとしてexistingを作成.作成は問題なく可能.
         response = self.client.post(self.url, existing_user_data)
         self.assertTrue(
-            User.objects.filter(
+            CustomUser.objects.filter(
                 username=existing_user_data["username"],
             ).exists()
         )
         # もう一度同じデータでユーザ作成
         response = self.client.post(self.url, existing_user_data)
 
-        # User.objects.all().count() == 1
-        self.assertEqual(User.objects.all().count(), 1)
+        # CustomUser.objects.all().count() == 1
+        self.assertEqual(CustomUser.objects.all().count(), 1)
         form = response.context["form"]
         self.assertEqual(response.status_code, 200)
         self.assertFalse(form.is_valid())
@@ -168,12 +168,12 @@ class TestSignupView(TestCase):
             "password1": "testpassword",
             "password2": "testpassword",
         }
-        user_record_count = User.objects.all().count()
+        user_record_count = CustomUser.objects.all().count()
         response = self.client.post(self.url, email_invalid_data)
         form = response.context["form"]
         self.assertEqual(response.status_code, 200)
-        # 以下でUserテーブルのレコードは増えているか確認.
-        self.assertEqual(user_record_count, User.objects.all().count())
+        # 以下でCustomUserテーブルのレコードは増えているか確認.
+        self.assertEqual(user_record_count, CustomUser.objects.all().count())
         self.assertFalse(form.is_valid())
         self.assertIn("有効なメールアドレスを入力してください。", form.errors["email"])
 
@@ -184,12 +184,12 @@ class TestSignupView(TestCase):
             "password1": "short",
             "password2": "short",
         }
-        user_record_count = User.objects.all().count()
+        user_record_count = CustomUser.objects.all().count()
         response = self.client.post(self.url, too_short_password_data)
         form = response.context["form"]
         self.assertEqual(response.status_code, 200)
-        # 以下でUserテーブルのレコードは増えているか確認.
-        self.assertEqual(user_record_count, User.objects.all().count())
+        # 以下でCustomUserテーブルのレコードは増えているか確認.
+        self.assertEqual(user_record_count, CustomUser.objects.all().count())
         self.assertFalse(form.is_valid())
         self.assertIn("このパスワードは短すぎます。最低 8 文字以上必要です。", form.errors["password2"])
 
@@ -200,15 +200,15 @@ class TestSignupView(TestCase):
             "password1": "testuser1",
             "password2": "testuser1",
         }
-        user_record_count = User.objects.all().count()
+        user_record_count = CustomUser.objects.all().count()
         response = self.client.post(
             self.url,
             password_similar_to_username_data,
         )
         form = response.context["form"]
         self.assertEqual(response.status_code, 200)
-        # 以下でUserテーブルのレコードは増えているか確認.
-        self.assertEqual(user_record_count, User.objects.all().count())
+        # 以下でCustomUserテーブルのレコードは増えているか確認.
+        self.assertEqual(user_record_count, CustomUser.objects.all().count())
         self.assertFalse(form.is_valid())
         self.assertIn("このパスワードは ユーザー名 と似すぎています。", form.errors["password2"])
         # パスワードが空白の時はpassword1とpassword2両方でエラーが出ていたのにここはなぜ2だけエラー？
@@ -220,15 +220,15 @@ class TestSignupView(TestCase):
             "password1": "875329948",
             "password2": "875329948",
         }
-        user_record_count = User.objects.all().count()
+        user_record_count = CustomUser.objects.all().count()
         response = self.client.post(
             self.url,
             only_numbers_password_data,
         )
         form = response.context["form"]
         self.assertEqual(response.status_code, 200)
-        # 以下でUserテーブルのレコードは増えているか確認.
-        self.assertEqual(user_record_count, User.objects.all().count())
+        # 以下でCustomUserテーブルのレコードは増えているか確認.
+        self.assertEqual(user_record_count, CustomUser.objects.all().count())
         self.assertFalse(form.is_valid())
         self.assertIn("このパスワードは数字しか使われていません。", form.errors["password2"])
 
@@ -239,15 +239,15 @@ class TestSignupView(TestCase):
             "password1": "fdasjkn2",
             "password2": "novcian2",
         }
-        user_record_count = User.objects.all().count()
+        user_record_count = CustomUser.objects.all().count()
         response = self.client.post(
             self.url,
             with_mismatch_password_data,
         )
         form = response.context["form"]
         self.assertEqual(response.status_code, 200)
-        # 以下でUserテーブルのレコードは増えているか確認.
-        self.assertEqual(user_record_count, User.objects.all().count())
+        # 以下でCustomUserテーブルのレコードは増えているか確認.
+        self.assertEqual(user_record_count, CustomUser.objects.all().count())
         self.assertFalse(form.is_valid())
         self.assertIn("確認用パスワードが一致しません。", form.errors["password2"])
 

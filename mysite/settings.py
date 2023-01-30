@@ -111,7 +111,6 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
-
 # Internationalization
 # https://docs.djangoproject.com/en/4.0/topics/i18n/
 
@@ -138,9 +137,3 @@ AUTH_USER_MODEL = "accounts.CustomUser"
 # AUTH_USER_MODELはカスタマイズしたUserモデルをデフォルトのUserモデルに代わって使用するときにsettings.pyにて指定する
 # この操作によって，デフォルトのUserモデルを上書きしている
 # その後，makemigrationsとmigrateによりユーザモデルをデータベース反映させる
-
-LOGIN_REDIRECT_URL = "tweets:home"
-
-LOGIN_URL = "accounts:login"
-
-LOGOUT_REDIRECT_URL = "welcome:index"

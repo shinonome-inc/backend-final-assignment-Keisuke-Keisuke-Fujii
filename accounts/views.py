@@ -1,5 +1,5 @@
-from django.shortcuts import render
-from django.contrib.auth import login  # authenticate
+from django.shortcuts import render, redirect
+from django.contrib.auth import login, authenticate
 from django.urls import reverse_lazy
 from django.views.generic import CreateView
 
@@ -23,10 +23,9 @@ class SignupView(CreateView):
     """
 
     def form_valid(self, form):
-        response = super().form_valid(
-            form
-        )  # 2つのform_validを実行．CBV参照．このresponseには返り値であるHttpResponseRedirectが入る
-        user = self.object
+        response = super().form_valid(form)
+        # 2つのform_validを実行．CCBV参照．このresponseには返り値であるHttpResponseRedirectが入る
+        user = self.object  # CustomUserモデルのインスタンスを変数に格納
         login(self.request, user)
         """
         self.requestの中身はHttpReuqestオブジェクト.第2引数にログインさせたいユーザーインスタンス
