@@ -1,7 +1,7 @@
 from django.test import TestCase
 from django.urls import reverse
 from django.contrib.auth import SESSION_KEY, get_user_model
-from django.conf import settings
+# from django.conf import settings
 
 CustomUser = get_user_model()
 
@@ -180,6 +180,7 @@ class TestSignupView(TestCase):
             "password2": "short",
         }
         response = self.client.post(self.url, too_short_password_data)
+        print(response)
         form = response.context["form"]
         self.assertEqual(response.status_code, 200)
         # 以下でCustomUserテーブルのレコードは増えていないことを確認.

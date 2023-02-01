@@ -16,6 +16,7 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path, include
 
+#pathの第一引数は((ホームURL)/(第一引数)にアクセスされた時の動作．includeは各app(accountsやtweets)のurls.pyにつないでいる)
 urlpatterns = [
     path("admin/", admin.site.urls),
     path("accounts/", include("accounts.urls")),
