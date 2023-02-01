@@ -13,6 +13,7 @@ https://docs.djangoproject.com/en/4.0/ref/settings/
 from pathlib import Path
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
+# .parent.parentで親の親ディレクトリすなわちbackend-finalを指定
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 
@@ -54,10 +55,15 @@ MIDDLEWARE = [
 
 ROOT_URLCONF = "mysite.urls"
 
+"""
+template実装時のベストプラクティスはプロジェクトフォルダ直下にtemplatesフォルダを作成し、そこに各アプリと同じ名前のフォルダを作成していくこと
+    そしてsettingsのTEMPLATESを[BASE_DIR / "templates"]に書き変える
+    なぜならデフォルトではdjangoは(app名)/templates/(同じapp名)/template.htmlを読み取るから
+"""
 TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
-        "DIRS": [],
+        "DIRS": [BASE_DIR / "templates"],
         "APP_DIRS": True,
         "OPTIONS": {
             "context_processors": [
@@ -102,13 +108,12 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
-
 # Internationalization
 # https://docs.djangoproject.com/en/4.0/topics/i18n/
 
-LANGUAGE_CODE = "en-us"
+LANGUAGE_CODE = "ja"
 
-TIME_ZONE = "UTC"
+TIME_ZONE = "Asia/Tokyo"
 
 USE_I18N = True
 
@@ -124,3 +129,8 @@ STATIC_URL = "static/"
 # https://docs.djangoproject.com/en/4.0/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+
+AUTH_USER_MODEL = "accounts.CustomUser"
+# AUTH_USER_MODELはカスタマイズしたUserモデルをデフォルトのUserモデルに代わって使用するときにsettings.pyにて指定する
+# この操作によって，デフォルトのUserモデルを上書きしている
+# その後，makemigrationsとmigrateによりユーザモデルをデータベース反映させる

@@ -3,9 +3,11 @@ from django.urls import path, include
 
 from . import views
 
+# app_name:nameでaccounts:signupとなる．
+# プロジェクトmysiteのurlsからここに来て，もう一度URLを調べpath一覧に一致するurlがあればそのviewメソッド実行
 app_name = "accounts"
 urlpatterns = [
-    # path('signup/', views.SignUpView.as_view(), name='signup'),
+    path("signup/", views.SignupView.as_view(), name="signup"),
     # path('login/', auth_views.LoginView.as_view(), name='login'),
     # path('logout/', auth_views.LogoutView.as_view(), name='logout'),
     # path('<str:username>/', views.UserProfileView.as_view(), name='user_profile'),

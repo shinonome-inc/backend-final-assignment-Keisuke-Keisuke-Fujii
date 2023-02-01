@@ -1,3 +1,9 @@
-from django.shortcuts import render
+# from django.shortcuts import render
+from django.contrib.auth.mixins import LoginRequiredMixin
+from django.views.generic import TemplateView
 
-# Create your views here.
+# サインアップにおけるリダイレクト先の画面としてHomeView
+
+
+class HomeView(LoginRequiredMixin, TemplateView):
+    template_name = "tweets/home.html"
