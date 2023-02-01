@@ -1,6 +1,7 @@
+from django.contrib.auth import SESSION_KEY, get_user_model
 from django.test import TestCase
 from django.urls import reverse
-from django.contrib.auth import SESSION_KEY, get_user_model
+
 # from django.conf import settings
 
 CustomUser = get_user_model()
@@ -13,14 +14,7 @@ class TestSignupView(TestCase):
         self.url = reverse("accounts:signup")
 
     def test_success_get(self):
-        """
-        ユーザーがaccounts/signup/ のURLに訪れそのテンプレートhtmlが表示されているかを確認
-        ユーザーが作成され，ログインできているか確認.
-        1. tweets/homeにリダイレクトすること
-        2. ユーザーが作成されること
-        3. ログイン状態になること
-        を確認する
-        """
+        # ユーザーがaccounts/signup/ のURLに訪れそのテンプレートhtmlが表示されているかを確認
         response = self.client.get(self.url)  # accounts/signup/ のURLに訪れる動作
 
         self.assertEqual(response.status_code, 200)  # コード200なのを確認
@@ -47,11 +41,6 @@ class TestSignupView(TestCase):
             target_status_code=200,  # 画面表示がOKである
         )  # responseにより登録されたデータが存在していることを確認
         self.assertTrue(
-            # モデル（user）.objects（モデルマネージャ（モデルを操作するもの））.モデルメソッド
-            # モデルを操作（filterなど）する時にはobjectsが必要
-            # モデルマネージャでモデルを操作した後はクエリセットかモデルインスタンスが返される
-            # クエリセットが返された場合は（クエリセット）.モデルメソッドで後の操作できる．
-            # モデルインスタンスなら（モデルインスタンス）.objects（モデルマネージャ（モデルを操作するもの））.モデルメソッド
             CustomUser.objects.filter(
                 username=data["username"],
             ).exists()
@@ -68,8 +57,6 @@ class TestSignupView(TestCase):
         response = self.client.post(self.url, form_empty_data)
         # ↑ responseで表示されているhtml等の情報を全ていれる.dict型.
         form = response.context["form"]
-        # ↑ response.contextはdict型でデータが入っており、その中のformを取ってきたい.
-        # よってキーにformを指定することでformを取得.
         # responseで表示されている全てのhtml等の情報の中からform情報(キー)を取得.
         # ここのformはSignupViewのform_classに代入した SignupForm のインスタンスにあたる(モデルインスタンス).
         # ここで何してるか正直わからない
