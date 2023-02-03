@@ -1,6 +1,6 @@
 {% extends "base.html" %} <!--base.htmlを継承-->
 
-{% block title %}Sign Up{% endblock %} <!-- titleを入れる -->
+{% block title %}Sign Up ユーザ登録ページ{% endblock %} <!-- titleを入れる -->
 
 {% block content %}
 <form method="post">
@@ -8,6 +8,10 @@
     {% csrf_token %} <!-- csrf_token必須。formタグ内であればどこに書いてもOK -->
     <button type="submit">ユーザー登録</button>
 </form>
+
+<div>
+    <a href="/accounts/login/">既にアカウントをお持ちの方はこちらからログイン</a>
+</div>
 {% endblock %}
 
 <!--template実装時のベストプラクティスはプロジェクトフォルダ直下にtemplatesフォルダを作成し、そこに各アプリと同じ名前のフォルダを作成していくこと

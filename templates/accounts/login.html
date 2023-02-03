@@ -1,0 +1,15 @@
+{% extends "base.html" %} <!--base.htmlを継承-->
+
+{% block title %}Log in ログインページ{% endblock %} <!-- titleを入れる -->
+
+{% block content %}
+<form method="post">
+    {{ form.as_p }} <!-- formにはLoginFormのインスタンスが入っている。as_pとすることで、各input要素がpタグで囲まれた状態で表示される。-->
+    {% csrf_token %} <!-- csrf_token必須。formタグ内であればどこに書いてもOK -->
+    <button type="submit">ログイン</button>
+</form>
+
+<div>
+    <a href="/accounts/signup/">アカウントをお持ちでない方はこちらから新規登録</a>
+</div>
+{% endblock %}

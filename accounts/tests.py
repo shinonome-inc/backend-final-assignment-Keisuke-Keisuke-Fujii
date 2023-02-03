@@ -1,8 +1,7 @@
+from django.conf import settings
 from django.contrib.auth import SESSION_KEY, get_user_model
 from django.test import TestCase
 from django.urls import reverse
-
-# from django.conf import settings
 
 CustomUser = get_user_model()
 
@@ -34,12 +33,15 @@ class TestSignupView(TestCase):
         }
         response = self.client.post(self.url, data)
 
+        # responseにより登録されたデータが存在していることを確認
         self.assertRedirects(
             response,  # responseという操作（インスタンス？）が，
-            reverse("tweets:home"),  # reverse逆引URL(tweets:home)へ
+            reverse(
+                settings.LOGIN_REDIRECT_URL
+            ),  # reverse逆引URL(LOGIN_REDIRECT_URL=tweets:home)へ
             status_code=302,  # ちゃんとリダイレクトという動きが行われ
             target_status_code=200,  # 画面表示がOKである
-        )  # responseにより登録されたデータが存在していることを確認
+        )
         self.assertTrue(
             CustomUser.objects.filter(
                 username=data["username"],
@@ -231,23 +233,85 @@ class TestSignupView(TestCase):
         self.assertIn("確認用パスワードが一致しません。", form.errors["password2"])
 
 
-class TestLoginView(TestCase):
+class TestUserLoginView(TestCase):
+    def setUp(self):
+        # ログインフォームのあるurlページへの逆引き
+        self.url = reverse(settings.LOGIN_URL)
+        # ログインするユーザのデータをモデルに追加して既存ユーザ扱いにする
+        self.user = CustomUser.objects.create_user(
+            username="testuser",
+            email="test@test.com",
+            password="testpassword",
+        )
+
     def test_success_get(self):
-        pass
+        # ユーザーがaccounts/login/ のURLに訪れそのテンプレートhtmlが表示されているかを確認
+        response = self.client.get(self.url)  # accounts/login/ のURLに訪れる動作
+
+        self.assertEqual(response.status_code, 200)  # コード200なのを確認
+        self.assertTemplateUsed(response, "accounts/login.html")
 
     def test_success_post(self):
-        pass
+        login_success_post_data = {
+            "username": "testuser",
+            "password": "testpassword",
+        }
+        response = self.client.post(self.url, login_success_post_data)
+        self.assertRedirects(
+            response,
+            reverse(settings.LOGIN_REDIRECT_URL),
+            status_code=302,
+            target_status_code=200,
+        )
+        self.assertIn(SESSION_KEY, self.client.session)
 
     def test_failure_post_with_not_exists_user(self):
-        pass
+        not_exists_user_data = {
+            "username": self.user.username + "aiueo",
+            "password": self.user.password,
+        }
+        response = self.client.post(self.url, not_exists_user_data)
+        form = response.context["form"]
+        self.assertEqual(response.status_code, 200)
+        self.assertFalse(form.is_valid())
+        self.assertIn(
+            "正しいユーザー名とパスワードを入力してください。どちらのフィールドも大文字と小文字は区別されます。",
+            form.errors["__all__"],
+        )
+        self.assertNotIn(SESSION_KEY, self.client.session)
 
     def test_failure_post_with_empty_password(self):
-        pass
+        empty_password_data = {
+            "username": self.user.username,
+            "password": "",
+        }
+        response = self.client.post(self.url, empty_password_data)
+        form = response.context["form"]
+        self.assertEqual(response.status_code, 200)
+        self.assertFalse(form.is_valid())
+        self.assertIn("このフィールドは必須です。", form.errors["password"])
+        self.assertNotIn(SESSION_KEY, self.client.session)
 
 
-class TestLogoutView(TestCase):
-    def test_success_get(self):
-        pass
+class TestUserLogoutView(TestCase):
+    def setUp(self):
+        self.user = CustomUser.objects.create_user(
+            username="testuser",
+            password="testpassword",
+        )
+
+        self.client.login(username="testuser", password="testpassword")
+
+    def test_success_post(self):
+        response = self.client.post(reverse("accounts:logout"))  # どのような処理の実行内容
+        # （ローカルホスト）/accounts/logoutへのリクエストがあると，/accounts/loginに連れていくようになっている
+        self.assertRedirects(
+            response,
+            reverse(settings.LOGOUT_REDIRECT_URL),  # どのような処理の実行結果
+            status_code=302,
+            target_status_code=200,
+        )
+        self.assertNotIn(SESSION_KEY, self.client.session)
 
 
 class TestUserProfileView(TestCase):
