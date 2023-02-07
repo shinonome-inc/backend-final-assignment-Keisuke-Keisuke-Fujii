@@ -305,6 +305,7 @@ class TestUserLogoutView(TestCase):
     def test_success_post(self):
         response = self.client.post(reverse("accounts:logout"))  # どのような処理の実行内容
         # （ローカルホスト）/accounts/logoutへのリクエストがあると，/accounts/loginに連れていくようになっている
+        # djangoのデフォルトのLogoutViewにて，ログアウトした時はsettings.LOGOUT_REDIRECT_URLに連れていくようになっている
         self.assertRedirects(
             response,
             reverse(settings.LOGOUT_REDIRECT_URL),  # どのような処理の実行結果

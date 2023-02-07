@@ -3,15 +3,15 @@
 {% block title %}Sign Up ユーザ登録ページ{% endblock %} <!-- titleを入れる -->
 
 {% block content %}
+<div>
+    <h1>ユーザ登録</h1>
+</div>
+
 <form method="post">
     {{ form.as_p }} <!-- formにはSignupFormのインスタンスが入っている。as_pとすることで、各input要素がpタグで囲まれた状態で表示される。-->
     {% csrf_token %} <!-- csrf_token必須。formタグ内であればどこに書いてもOK -->
-    <button type="submit">ユーザー登録</button>
+    <button type="submit">以上の内容でユーザー登録</button>
 </form>
-
-<div>
-    <a href="/accounts/login/">既にアカウントをお持ちの方はこちらからログイン</a>
-</div>
 {% endblock %}
 
 <!--template実装時のベストプラクティスはプロジェクトフォルダ直下にtemplatesフォルダを作成し、そこに各アプリと同じ名前のフォルダを作成していくこと
