@@ -10,13 +10,11 @@
 
 <body>
     <div>
-        <h3><a href="/">Twitter Clone</a></h3>
-    </div>
-
-    <div>
         {% if request.user.is_authenticated %}
+        <h3><a href="{% url 'tweets:home'%}">Twitter Clone</a></h3>
         <a href="{% url 'accounts:logout'%}">ログアウトする</a>
         {% else %}
+        <h3><a href="{% url 'welcome:index'%}">Twitter Clone</a></h3>
         <a href="{% url 'accounts:login'%}">ログインページ</a>
         <a href="{% url 'accounts:signup'%}">新規登録</a>
         {% endif %}
