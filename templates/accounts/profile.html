@@ -1,0 +1,13 @@
+{% extends "base.html" %} <!--base.htmlを継承-->
+
+{% block title %}profile{% endblock %} <!-- titleを入れる -->
+
+{% block content %}
+<div>
+    <h1>{{ user.username }}のプロフィール</h1>
+</div>
+{% endblock %}
+
+<!--template実装時のベストプラクティスはプロジェクトフォルダ直下にtemplatesフォルダを作成し、そこに各アプリと同じ名前のフォルダを作成していくこと
+    そしてsettingsのTEMPLATESを[BASE_DIR / "templates"]に書き変える
+    なぜならデフォルトではdjangoは(app名)/templates/(同じapp名)/template.htmlを読み取るから-->
