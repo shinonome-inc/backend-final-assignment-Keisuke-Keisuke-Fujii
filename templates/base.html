@@ -11,9 +11,9 @@
 <body>
     <div>
         {% if request.user.is_authenticated %}
-        <h3><a href="{% url 'tweets:home'%}">Twitter Clone</a></h3>
+        <h3><a href="{% url 'tweets:home' %}">Twitter Clone</a></h3>
         <a href="{% url 'accounts:logout'%}">ログアウトする</a>
-        <a href="/accounts/{{ request.user.username }}"><button type="button">{{ request.user.username }}</button></a>
+        <a href="{% url 'accounts:user_profile' user.username %}"><button type="button">{{ user.username }}</button></a>
         {% else %}
         <h3><a href="{% url 'welcome:index'%}">Twitter Clone</a></h3>
         <a href="{% url 'accounts:login'%}">ログインページ</a>
