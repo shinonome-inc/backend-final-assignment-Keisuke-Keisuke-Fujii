@@ -1,5 +1,4 @@
-from django.contrib.auth import views as auth_views
-from django.urls import include, path
+from django.urls import path
 
 from . import views
 
@@ -10,7 +9,7 @@ urlpatterns = [
     path("signup/", views.SignupView.as_view(), name="signup"),
     path("login/", views.UserLoginView.as_view(), name="login"),
     path("logout/", views.UserLogoutView.as_view(), name="logout"),
-    path('<str:username>/', views.UserProfileView.as_view(), name='user_profile'),
+    path("<str:username>/", views.UserProfileView.as_view(), name="user_profile"),
     # path('<str:username>/follow/', views.FollowView.as_view(), name='follow'),
     # path('<str:username>/unfollow/', views.UnFollowView, name='unfollow'),
     # path('<str:username>/following_list/', views.FollowingListView.as_view(), name='following_list'),

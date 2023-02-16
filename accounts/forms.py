@@ -16,6 +16,14 @@ class SignupForm(UserCreationForm):
         # fieldsの欄には、Userモデルの中にある、
         # blankにはできない値であるusernameとemailをセットする。
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        for field in self.fields.values():  # すべてのフィールド取り出し
+            field.widget.attrs["placeholder"] = field.label
+
 
 class LoginForm(AuthenticationForm):
-    pass
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        for field in self.fields.values():
+            field.widget.attrs["placeholder"] = field.label
