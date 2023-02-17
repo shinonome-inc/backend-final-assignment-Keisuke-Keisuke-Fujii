@@ -1,12 +1,10 @@
 from django.conf import settings
 from django.contrib.auth import authenticate, login
 from django.contrib.auth.mixins import LoginRequiredMixin
-from django.contrib.auth.views import LoginView
-from django.shortcuts import render
 from django.urls import reverse_lazy
-from django.views.generic import CreateView, DetailView, TemplateView
+from django.views.generic import CreateView, TemplateView
 
-from .forms import LoginForm, SignupForm
+from .forms import SignupForm
 
 # SignUpViewではユーザ作成機能，作成されたユーザのログイン機能を実装する
 
