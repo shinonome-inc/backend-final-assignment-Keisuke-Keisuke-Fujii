@@ -3,7 +3,7 @@ from django.urls import path
 
 from . import forms, views
 
-# 逆引きなどのための名称はapp_name:nameなのでaccounts:signupとなる．
+# 逆引きなどのための名称はapp_name:nameなのでaccounts:signupなどとなる．
 # プロジェクトmysiteのurlsからここに来て，もう一度URLを調べpath一覧に一致するurlがあればそのviewメソッド実行
 app_name = "accounts"
 urlpatterns = [
