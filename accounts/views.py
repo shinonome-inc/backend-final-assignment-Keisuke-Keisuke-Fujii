@@ -35,9 +35,5 @@ class UserLoginView(LoginView):
     template_name = "accounts/login.html"
 
 
-class UserLogoutView(LogoutView):
-    template_name = "accounts/logout.html"
-
-
 class UserProfileView(LoginRequiredMixin, TemplateView):
     template_name = "accounts/profile.html"
