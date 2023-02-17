@@ -1,17 +1,11 @@
 {% extends "base.html" %} <!--base.htmlを継承-->
 
-{% block title %}Sign Up ユーザ登録ページ{% endblock %} <!-- titleを入れる -->
+{% block title %}profile{% endblock %} <!-- titleを入れる -->
 
 {% block content %}
 <div>
-    <h1>ユーザ登録</h1>
+    <h1>{{ user.username }}のプロフィール</h1>
 </div>
-
-<form method="post">
-    {{ form.as_p }} <!-- formにはSignupFormのインスタンスが入っている。as_pとすることで、各input要素がpタグで囲まれた状態で表示される。-->
-    {% csrf_token %} <!-- csrf_token必須。formタグ内であればどこに書いてもOK -->
-    <button type="submit">以上の内容でユーザー登録</button>
-</form>
 {% endblock %}
 
 <!--template実装時のベストプラクティスはプロジェクトフォルダ直下にtemplatesフォルダを作成し、そこに各アプリと同じ名前のフォルダを作成していくこと
