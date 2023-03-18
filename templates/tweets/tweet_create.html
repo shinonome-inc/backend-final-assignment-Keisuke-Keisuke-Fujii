@@ -1,0 +1,15 @@
+{% extends "base.html" %} <!--base.htmlを継承-->
+
+{% block title %}Post Tweet投稿{% endblock %} <!-- title(タブ名) -->
+
+{% block content %}
+<div>
+    <h1>Tweet 投稿</h1>
+</div>
+
+<form method="post">
+    {{ form.as_p }} <!-- formにはTweetFormのインスタンスが入っている。as_pとすることで、各input要素がpタグで囲まれた状態で表示される。-->
+    {% csrf_token %} <!-- csrf_token必須。formタグ内であればどこに書いてもOK -->
+    <button type="submit">ツイート</button>
+</form>
+{% endblock %}
