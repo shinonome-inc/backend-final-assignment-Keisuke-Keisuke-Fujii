@@ -3,6 +3,8 @@ from django.contrib.auth import SESSION_KEY, get_user_model
 from django.test import TestCase
 from django.urls import reverse
 
+from tweets.models import Tweet
+
 CustomUser = get_user_model()
 
 
@@ -249,7 +251,9 @@ class TestUserLoginView(TestCase):
         response = self.client.get(self.url)  # accounts/login/ のURLに訪れる動作
 
         self.assertEqual(response.status_code, 200)  # コード200なのを確認
-        self.assertTemplateUsed(response, "accounts/login.html")
+        self.assertTemplateUsed(
+            response, "accounts/login.html"
+        )  # ログインテンプレートhtmlが表示されているかを確認
 
     def test_success_post(self):
         login_success_post_data = {
@@ -317,16 +321,39 @@ class TestUserLogoutView(TestCase):
 
 class TestUserProfileView(TestCase):
     def setUp(self):
-        # ログインフォームのあるurlページへの逆引き
-        self.url = reverse("accounts:user_profile")
+        # ログイン後の画面なのでログイン用テストユーザ作成
+        # ログインするユーザのデータをモデルに追加して既存ユーザ扱いにする
+        self.user1 = CustomUser.objects.create_user(
+            username="testuser1",
+            password="testpassword1",
+            email="test1@example.com",
+        )
+        # フォロー機能などで後々self.user2を作るらしい
+
+        # ログインさせる
+        self.client.login(username="testuser1", password="testpassword1")
+
+        # プロフィール画面url文字列の逆引き
+        self.url = reverse(
+            "accounts:user_profile", kwargs={"username": self.user1.username}
+        )
+
+        # ツイート投稿させる
+        self.post = Tweet.objects.create(user=self.user1, content="testpost")
 
     def test_success_get(self):
         # context内に含まれるツイート一覧が、DBに保存されている該当のユーザーのツイート一覧と同一である
-        # ↓ユーザーがaccounts/<str:username>/ のURLに訪れそのテンプレートhtmlが表示されているかを確認
+        # ↓ユーザーがaccounts/<str:username>/ のURLに訪れているか確認
         response = self.client.get(self.url)  # プロフィールページURLに訪れる動作
+        context = response.context
 
         self.assertEqual(response.status_code, 200)  # コード200なのを確認
-        self.assertTemplateUsed(response, "accounts/profile.html")
+        self.assertTemplateUsed(
+            response, "accounts/profile.html"
+        )  # プロフィールテンプレートhtmlが表示されているかを確認
+        self.assertQuerysetEqual(
+            context["tweet_list"], Tweet.objects.filter(user=self.user1)
+        )  # 特定ユーザのツイート一覧とクエリが等しいか確認
 
 
 class TestUserProfileEditView(TestCase):

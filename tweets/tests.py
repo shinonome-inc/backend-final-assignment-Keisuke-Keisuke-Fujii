@@ -1,8 +1,9 @@
 from django.contrib.auth import get_user_model
 from django.test import TestCase
-from django.urls import reverse
 
-from .models import Like, Tweet
+# from django.urls import reverse
+
+# from .models import Like, Tweet
 
 CustomUser = get_user_model()
 
