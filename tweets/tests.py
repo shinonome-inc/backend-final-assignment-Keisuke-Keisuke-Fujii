@@ -96,6 +96,7 @@ class TestTweetCreateView(TestCase):
         """
         test_empty_content_tweet = {"content": ""}
         response = self.client.post(self.url, test_empty_content_tweet)
+
         self.assertEqual(response.status_code, 200)
 
         # 内容が空白のツイートがTweetモデルのcontentフィールドに存在していないことを確認
@@ -107,7 +108,27 @@ class TestTweetCreateView(TestCase):
         self.assertIn("このフィールドは必須です。", form.errors["content"])
 
     def test_failure_post_with_too_long_content(self):
-        pass
+        """
+        ・Response Status Code: 200
+        ・フォームに適切なエラーメッセージが含まれている
+        ・DBにレコードが追加されていない
+        """
+        test_too_long_content_tweet = {"content": "a" * 300}
+        response = self.client.post(self.url, test_too_long_content_tweet)
+
+        self.assertEqual(response.status_code, 200)
+        self.assertFalse(
+            Tweet.objects.filter(
+                content=test_too_long_content_tweet["content"]
+            ).exists()
+        )
+        form = response.context["form"]
+        self.assertIn(
+            "この値は 140 文字以下でなければなりません( "
+            + str(len(test_too_long_content_tweet["content"]))
+            + " 文字になっています)。",
+            form.errors["content"],
+        )
 
 
 class TestTweetDetailView(TestCase):
