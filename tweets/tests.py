@@ -89,7 +89,22 @@ class TestTweetCreateView(TestCase):
         self.assertIn(SESSION_KEY, self.client.session)
 
     def test_failure_post_with_empty_content(self):
-        pass
+        """
+        ・Response Status Code: 200
+        ・フォームに適切なエラーメッセージが含まれている
+        ・DBにレコードが追加されていない
+        """
+        test_empty_content_tweet = {"content": ""}
+        response = self.client.post(self.url, test_empty_content_tweet)
+        self.assertEqual(response.status_code, 200)
+
+        # 内容が空白のツイートがTweetモデルのcontentフィールドに存在していないことを確認
+        self.assertFalse(
+            Tweet.objects.filter(content=test_empty_content_tweet["content"]).exists()
+        )
+        # responseで表示されている全てのhtml等の情報の中からform情報(ディクショナリのキー)を取得.
+        form = response.context["form"]
+        self.assertIn("このフィールドは必須です。", form.errors["content"])
 
     def test_failure_post_with_too_long_content(self):
         pass
