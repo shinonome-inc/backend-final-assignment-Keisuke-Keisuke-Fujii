@@ -1,17 +1,44 @@
 from django.contrib.auth import get_user_model
 from django.test import TestCase
+from django.urls import reverse
 
-# from django.urls import reverse
-
-# from .models import Like, Tweet
+from .models import Tweet
 
 CustomUser = get_user_model()
 
 
 class TestHomeView(TestCase):
-    # context内に含まれるツイート一覧が、DBに保存されているツイート一覧と同一である
+    def setUp(self):
+        # ログイン後の画面なのでログイン用テストユーザ作成
+        # ログインするユーザのデータをモデルに追加して既存ユーザ扱いにする
+        self.user1 = CustomUser.objects.create_user(
+            username="testuser1",
+            password="testpassword1",
+            email="test1@example.com",
+        )
+
+        # ログインさせる
+        self.client.login(username="testuser1", password="testpassword1")
+
+        # home画面URL文字列の逆引き
+        self.url = reverse("tweets:home")
+
+        # ツイート投稿させる
+        self.post = Tweet.objects.create(user=self.user1, content="testpost")
+
     def test_success_get(self):
-        pass
+        # context内に含まれるツイート一覧が、DBに保存されているツイート一覧と同一である
+        # ↓ユーザーがtweets/home/ のURLに訪れているか確認
+        response = self.client.get(self.url)  # プロフィールページURLに訪れる動作
+        context = response.context
+
+        self.assertEqual(response.status_code, 200)  # コード200なのを確認
+        self.assertTemplateUsed(
+            response, "tweets/home.html"
+        )  # ホーム画面テンプレートhtmlが表示されているかを確認
+        self.assertQuerysetEqual(
+            context["tweet_list"], Tweet.objects.all()
+        )  # レスポンスに想定通りのquerysetが含まれているか，全ユーザのツイート一覧とクエリが等しいか確認
 
 
 class TestTweetCreateView(TestCase):
