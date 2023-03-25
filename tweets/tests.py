@@ -27,7 +27,10 @@ class TestHomeView(TestCase):
         Tweet.objects.create(user=self.user1, content="testpost")
 
     def test_success_get(self):
-        # context内に含まれるツイート一覧が、DBに保存されているツイート一覧と同一である
+        """
+        全ユーザーのツイート一覧取得
+        ・context内に含まれるツイート一覧が、DBに保存されているツイート一覧と同一である
+        """
         # ↓ユーザーがtweets/home/ のURLに訪れているか確認
         response = self.client.get(self.url)  # プロフィールページURLに訪れる動作
 
@@ -57,7 +60,10 @@ class TestTweetCreateView(TestCase):
         self.url = reverse("tweets:create")
 
     def test_success_get(self):
-        # Response Status Code: 200
+        """
+        リクエストを送信する。
+        ・Response Status Code: 200
+        """
         response = self.client.get(self.url)
 
         self.assertEqual(response.status_code, 200)
@@ -65,6 +71,7 @@ class TestTweetCreateView(TestCase):
 
     def test_success_post(self):
         """
+        有効なcontentのデータでリクエストを送信する。
         ・Response Status Code: 302
         ・ホームにリダイレクトしている
         ・DBにデータが追加されている
@@ -93,6 +100,7 @@ class TestTweetCreateView(TestCase):
 
     def test_failure_post_with_empty_content(self):
         """
+        contentがブランクのデータでリクエストを送信する。
         ・Response Status Code: 200
         ・フォームに適切なエラーメッセージが含まれている
         ・DBにレコードが追加されていない
@@ -112,6 +120,7 @@ class TestTweetCreateView(TestCase):
 
     def test_failure_post_with_too_long_content(self):
         """
+        contentが長すぎるデータでリクエストを送信する。
         ・Response Status Code: 200
         ・フォームに適切なエラーメッセージが含まれている
         ・DBにレコードが追加されていない
@@ -149,6 +158,7 @@ class TestTweetDetailView(TestCase):
 
     def test_success_get(self):
         """
+        リクエストを送信する。
         ・Response Status Code: 200
         ・context内に含まれるツイートがDBと同一である
         """
@@ -169,16 +179,17 @@ class TestTweetDeleteView(TestCase):
             email="test1@example.com",
         )
         self.client.login(username="testuser1", password="testpassword1")
-        self.post = Tweet.objects.create(user=self.user1, content="testpost")
-        self.url = reverse("tweets:delete", kwargs={"pk": self.post.pk})
+        self.post1 = Tweet.objects.create(user=self.user1, content="testpost1")
+        self.post2 = Tweet.objects.create(user=self.user1, content="testpost2")
 
     def test_success_post(self):
         """
+        リクエストを送信する。
         ・Response Status Code: 302
         ・ホームにリダイレクトしている
         ・DBのデータが削除されている
         """
-
+        self.url = reverse("tweets:delete", kwargs={"pk": self.post1.pk})
         response = self.client.post(self.url)
         self.assertRedirects(
             response,
@@ -186,19 +197,32 @@ class TestTweetDeleteView(TestCase):
             status_code=302,
             target_status_code=200,
         )
-        # self.assertEqual(Tweet.objects.count(), 0)
-        self.assertFalse(Tweet.objects.filter(content="testpost").exists())
+        # self.assertEqual(Tweet.objects.all().count(), 0)でも良い
+        self.assertFalse(Tweet.objects.filter(content="testpost1").exists())
         """
         self.assertFalse(Tweet.objects.filter(content=self.post["content"]).exists())
         が駄目なのはなぜか
         TypeError: 'Tweet' object is not subscriptable がでる
-        self.postのクラスは<class 'tweets.models.Tweet'>
+        self.post1のクラスは<class 'tweets.models.Tweet'>
         """
 
     def test_failure_post_with_not_exist_tweet(self):
-        pass
+        """
+        存在しないTweetに対してリクエストを送信する。
+        ・Response Status Code: 404
+        ・DBのデータが削除されていない
+        """
+        self.url = reverse("tweets:delete", kwargs={"pk": 100})
+        response = self.client.post(self.url)
+        self.assertEqual(response.status_code, 404)
+        self.assertEqual(Tweet.objects.all().count(), 2)
 
     def test_failure_post_with_incorrect_user(self):
+        """
+        別のユーザーが作成したTweetに対してリクエストを送信する。
+        ・Response Status Code: 403
+        ・DBのデータが削除されていない
+        """
         pass
 
 

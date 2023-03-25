@@ -342,7 +342,10 @@ class TestUserProfileView(TestCase):
         Tweet.objects.create(user=self.user1, content="testpost")
 
     def test_success_get(self):
-        # context内に含まれるツイート一覧が、DBに保存されている該当のユーザーのツイート一覧と同一である
+        """
+        該当ユーザーのツイート一覧取得
+        ・context内に含まれるツイート一覧が、DBに保存されている該当のユーザーのツイート一覧と同一である
+        """
         # ↓ユーザーがaccounts/<str:username>/ のURLに訪れているか確認
         response = self.client.get(self.url)  # プロフィールページURLに訪れる動作
 
