@@ -336,15 +336,17 @@ class TestUserProfileView(TestCase):
         # プロフィール画面url文字列の逆引き
         self.url = reverse(
             "accounts:user_profile", kwargs={"username": self.user1.username}
-        )
+        )  # urls.pyでstr:usernameとなっているのでキーはusernameになる。
 
         # ツイート投稿させる
-        self.post = Tweet.objects.create(user=self.user1, content="testpost")
+        Tweet.objects.create(user=self.user1, content="testpost")
 
     def test_success_get(self):
         # context内に含まれるツイート一覧が、DBに保存されている該当のユーザーのツイート一覧と同一である
         # ↓ユーザーがaccounts/<str:username>/ のURLに訪れているか確認
         response = self.client.get(self.url)  # プロフィールページURLに訪れる動作
+
+        # プロフィール画面に存在する全てのcontextすなわち特定ユーザのツイートやフォロー数などの全ての要素
         context = response.context
 
         self.assertEqual(response.status_code, 200)  # コード200なのを確認
@@ -357,6 +359,7 @@ class TestUserProfileView(TestCase):
         """
         レスポンスに想定通りのquerysetが含まれているか,全ユーザのツイート一覧とクエリが等しいか確認
         tweet_listはaccounts/views.UserProfileViewのget_context_data内のcontext[tweet_list]
+        context["tweet_list"]はプロフィール画面で表示されるツイート一覧のコンテキスト形式
         """
 
 
