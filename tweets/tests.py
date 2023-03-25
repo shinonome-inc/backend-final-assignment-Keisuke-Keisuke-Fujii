@@ -36,14 +36,29 @@ class TestHomeView(TestCase):
         self.assertTemplateUsed(
             response, "tweets/home.html"
         )  # ホーム画面テンプレートhtmlが表示されているかを確認
-        self.assertQuerysetEqual(
-            context["tweet_list"], Tweet.objects.all()
-        )  # レスポンスに想定通りのquerysetが含まれているか，全ユーザのツイート一覧とクエリが等しいか確認
+        self.assertQuerysetEqual(context["tweet_list"], Tweet.objects.all())
+        """
+        レスポンスに想定通りのquerysetが含まれているか,全ユーザのツイート一覧とクエリが等しいか確認
+        tweet_listはtweets/views.HomeViewのcontext_object_name
+        """
 
 
 class TestTweetCreateView(TestCase):
+    def setUp(self):
+        self.user1 = CustomUser.objects.create_user(
+            username="testuser1",
+            password="testpassword1",
+            email="test1@example.com",
+        )
+        self.client.login(username="testuser1", password="testpassword1")
+        self.url = reverse("tweets:create")
+
     def test_success_get(self):
-        pass
+        # Response Status Code: 200
+        response = self.client.get(self.url)
+
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, "tweets/tweet_create.html")
 
     def test_success_post(self):
         pass

@@ -353,7 +353,11 @@ class TestUserProfileView(TestCase):
         )  # プロフィールテンプレートhtmlが表示されているかを確認
         self.assertQuerysetEqual(
             context["tweet_list"], Tweet.objects.filter(user=self.user1)
-        )  # 特定ユーザのツイート一覧とクエリが等しいか確認
+        )
+        """
+        レスポンスに想定通りのquerysetが含まれているか,全ユーザのツイート一覧とクエリが等しいか確認
+        tweet_listはaccounts/views.UserProfileViewのget_context_data内のcontext[tweet_list]
+        """
 
 
 class TestUserProfileEditView(TestCase):
