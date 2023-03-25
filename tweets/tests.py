@@ -178,9 +178,16 @@ class TestTweetDeleteView(TestCase):
             password="testpassword1",
             email="test1@example.com",
         )
+
+        self.user2 = CustomUser.objects.create_user(
+            username="testuser2",
+            password="testpassword2",
+            email="test2@example.com",
+        )
+
         self.client.login(username="testuser1", password="testpassword1")
         self.post1 = Tweet.objects.create(user=self.user1, content="testpost1")
-        self.post2 = Tweet.objects.create(user=self.user1, content="testpost2")
+        self.post2 = Tweet.objects.create(user=self.user2, content="testpost2")
 
     def test_success_post(self):
         """
@@ -212,9 +219,13 @@ class TestTweetDeleteView(TestCase):
         ・Response Status Code: 404
         ・DBのデータが削除されていない
         """
+
+        # URLエンドポイントが存在しないプライマリキーのURL
         self.url = reverse("tweets:delete", kwargs={"pk": 100})
         response = self.client.post(self.url)
         self.assertEqual(response.status_code, 404)
+
+        # ツイート数が最初に作った二つから減っていないことを確認
         self.assertEqual(Tweet.objects.all().count(), 2)
 
     def test_failure_post_with_incorrect_user(self):
@@ -223,7 +234,12 @@ class TestTweetDeleteView(TestCase):
         ・Response Status Code: 403
         ・DBのデータが削除されていない
         """
-        pass
+
+        # SetUpでuser1でログインしているが、user2のツイート(self.post2)の削除ページに行こうとする
+        self.url = reverse("tweets:delete", kwargs={"pk": self.post2.pk})
+        response = self.client.post(self.url)
+        self.assertEqual(response.status_code, 403)
+        self.assertEqual(Tweet.objects.all().count(), 2)
 
 
 class TestFavoriteView(TestCase):
