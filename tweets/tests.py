@@ -38,9 +38,7 @@ class TestHomeView(TestCase):
         context = response.context
 
         self.assertEqual(response.status_code, 200)  # コード200なのを確認
-        self.assertTemplateUsed(
-            response, "tweets/home.html"
-        )  # ホーム画面テンプレートhtmlが表示されているかを確認
+        self.assertTemplateUsed(response, "tweets/home.html")  # ホーム画面テンプレートhtmlが表示されているかを確認
         self.assertQuerysetEqual(context["tweet_list"], Tweet.objects.all())
         """
         レスポンスに想定通りのquerysetが含まれているか,全ユーザのツイート一覧とクエリが等しいか確認
@@ -111,9 +109,7 @@ class TestTweetCreateView(TestCase):
         self.assertEqual(response.status_code, 200)
 
         # 内容が空白のツイートがTweetモデルのcontentフィールドに存在していないことを確認
-        self.assertFalse(
-            Tweet.objects.filter(content=test_empty_content_tweet["content"]).exists()
-        )
+        self.assertFalse(Tweet.objects.filter(content=test_empty_content_tweet["content"]).exists())
         # responseで表示されている全てのhtml等の情報の中からform情報(ディクショナリのキー)を取得.
         form = response.context["form"]
         self.assertIn("このフィールドは必須です。", form.errors["content"])
@@ -129,16 +125,10 @@ class TestTweetCreateView(TestCase):
         response = self.client.post(self.url, test_too_long_content_tweet)
 
         self.assertEqual(response.status_code, 200)
-        self.assertFalse(
-            Tweet.objects.filter(
-                content=test_too_long_content_tweet["content"]
-            ).exists()
-        )
+        self.assertFalse(Tweet.objects.filter(content=test_too_long_content_tweet["content"]).exists())
         form = response.context["form"]
         self.assertIn(
-            "この値は 140 文字以下でなければなりません( "
-            + str(len(test_too_long_content_tweet["content"]))
-            + " 文字になっています)。",
+            "この値は 140 文字以下でなければなりません( " + str(len(test_too_long_content_tweet["content"])) + " 文字になっています)。",
             form.errors["content"],
         )
 
@@ -151,9 +141,7 @@ class TestTweetDetailView(TestCase):
             email="test1@example.com",
         )
         self.client.login(username="testuser1", password="testpassword1")
-        self.url = reverse(
-            "tweets:detail", kwargs={"pk": self.user1.pk}
-        )  # urls.pyでint:pkとなっているのでキーはidではなくpkになる。
+        self.url = reverse("tweets:detail", kwargs={"pk": self.user1.pk})  # urls.pyでint:pkとなっているのでキーはidではなくpkになる。
         self.post = Tweet.objects.create(user=self.user1, content="testpost")
 
     def test_success_get(self):

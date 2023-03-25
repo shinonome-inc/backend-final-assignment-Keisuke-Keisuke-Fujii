@@ -10,9 +10,7 @@ urlpatterns = [
     path("signup/", views.SignupView.as_view(), name="signup"),
     path(
         "login/",
-        LoginView.as_view(
-            form_class=forms.LoginForm, template_name="accounts/login.html"
-        ),
+        LoginView.as_view(form_class=forms.LoginForm, template_name="accounts/login.html"),
         name="login",
     ),
     path("logout/", LogoutView.as_view(), name="logout"),

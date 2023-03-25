@@ -38,9 +38,7 @@ class TestSignupView(TestCase):
         # responseにより登録されたデータが存在していることを確認
         self.assertRedirects(
             response,  # responseという操作（インスタンス？）が，
-            reverse(
-                settings.LOGIN_REDIRECT_URL
-            ),  # reverse逆引URL(LOGIN_REDIRECT_URL=tweets:home)へ
+            reverse(settings.LOGIN_REDIRECT_URL),  # reverse逆引URL(LOGIN_REDIRECT_URL=tweets:home)へ
             status_code=302,  # ちゃんとリダイレクトという動きが行われ
             target_status_code=200,  # 画面表示がOKである
         )
@@ -251,9 +249,7 @@ class TestUserLoginView(TestCase):
         response = self.client.get(self.url)  # accounts/login/ のURLに訪れる動作
 
         self.assertEqual(response.status_code, 200)  # コード200なのを確認
-        self.assertTemplateUsed(
-            response, "accounts/login.html"
-        )  # ログインテンプレートhtmlが表示されているかを確認
+        self.assertTemplateUsed(response, "accounts/login.html")  # ログインテンプレートhtmlが表示されているかを確認
 
     def test_success_post(self):
         login_success_post_data = {
@@ -353,12 +349,8 @@ class TestUserProfileView(TestCase):
         context = response.context
 
         self.assertEqual(response.status_code, 200)  # コード200なのを確認
-        self.assertTemplateUsed(
-            response, "accounts/profile.html"
-        )  # プロフィールテンプレートhtmlが表示されているかを確認
-        self.assertQuerysetEqual(
-            context["tweet_list"], Tweet.objects.filter(user=self.user1)
-        )
+        self.assertTemplateUsed(response, "accounts/profile.html")  # プロフィールテンプレートhtmlが表示されているかを確認
+        self.assertQuerysetEqual(context["tweet_list"], Tweet.objects.filter(user=self.user1))
         """
         レスポンスに想定通りのquerysetが含まれているか,全ユーザのツイート一覧とクエリが等しいか確認
         tweet_listはaccounts/views.UserProfileViewのget_context_data内のcontext[tweet_list]

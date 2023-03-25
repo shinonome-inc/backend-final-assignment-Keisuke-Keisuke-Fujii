@@ -42,9 +42,5 @@ class UserProfileView(LoginRequiredMixin, DetailView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         user = self.object
-        context["tweet_list"] = (
-            Tweet.objects.select_related("user")
-            .filter(user=user)
-            .order_by("-created_at")
-        )
+        context["tweet_list"] = Tweet.objects.select_related("user").filter(user=user).order_by("-created_at")
         return context
