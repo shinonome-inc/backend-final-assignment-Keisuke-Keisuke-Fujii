@@ -4,8 +4,23 @@
 
 {% block content %}
 <div>
-    <h1>{{ user.username }}のプロフィール</h1>
+    <h1>{{ profile.username }}のプロフィール</h1>
 </div>
+{% if tweet_list %}
+{% for tweet in tweet_list %}
+<div>
+    <h2><a href="{% url 'accounts:user_profile' tweet.user.username %}">{{tweet.user}}</a></h2>
+</div>
+<div>
+    <p>{{tweet.content}}</p>
+    <p>{{ tweet.created_at }}</p>
+    <a href="{% url 'tweets:detail' tweet.pk %}"><button type="button">詳細</button></a>
+</div>
+{% endfor %}
+
+{% else %}
+<h1>投稿はありません</h1>
+{% endif %}
 {% endblock %}
 
 <!--template実装時のベストプラクティスはプロジェクトフォルダ直下にtemplatesフォルダを作成し、そこに各アプリと同じ名前のフォルダを作成していくこと

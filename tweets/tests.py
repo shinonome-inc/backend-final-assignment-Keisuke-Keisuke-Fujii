@@ -1,7 +1,14 @@
+from django.contrib.auth import get_user_model
 from django.test import TestCase
+from django.urls import reverse
+
+from .models import Like, Tweet
+
+CustomUser = get_user_model()
 
 
 class TestHomeView(TestCase):
+    # context内に含まれるツイート一覧が、DBに保存されているツイート一覧と同一である
     def test_success_get(self):
         pass
 

@@ -1,22 +1,18 @@
 # from django.shortcuts import render
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.urls import reverse_lazy
-from django.views.generic import (
-    CreateView,
-    DeleteView,
-    DetailView,
-    ListView,
-    TemplateView,
-)
+from django.views.generic import CreateView, DeleteView, DetailView, ListView
 
 from .forms import TweetForm
 from .models import Tweet
 
-# サインアップにおけるリダイレクト先の画面としてHomeView
 
-
-class HomeView(LoginRequiredMixin, TemplateView):
+# サインアップにおけるリダイレクト先の画面用のHomeView
+class HomeView(LoginRequiredMixin, ListView):
+    model = Tweet
+    context_object_name = "tweet_list"
     template_name = "tweets/home.html"
+    queryset = model.objects.select_related("user").order_by("-created_at")
 
 
 class TweetCreateView(LoginRequiredMixin, CreateView):

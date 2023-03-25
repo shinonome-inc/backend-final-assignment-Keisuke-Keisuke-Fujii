@@ -4,4 +4,16 @@
 
 {% block content %}
 <h1>Home</h1>
+
+<div>
+    {% for tweet in tweet_list %}
+    <div>
+        <h2><a href="{% url 'accounts:user_profile' tweet.user.username %}">{{tweet.user}}</a></h2>
+    </div>
+    <div>
+        <p>{{tweet.content}}</p>
+        <a href="{% url 'tweets:detail' tweet.pk %}"><button type="button">詳細</button></a></a>
+    </div>
+    {% endfor %}
+</div>
 {% endblock %}

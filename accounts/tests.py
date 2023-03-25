@@ -316,8 +316,17 @@ class TestUserLogoutView(TestCase):
 
 
 class TestUserProfileView(TestCase):
+    def setUp(self):
+        # ログインフォームのあるurlページへの逆引き
+        self.url = reverse("accounts:user_profile")
+
     def test_success_get(self):
-        pass
+        # context内に含まれるツイート一覧が、DBに保存されている該当のユーザーのツイート一覧と同一である
+        # ↓ユーザーがaccounts/<str:username>/ のURLに訪れそのテンプレートhtmlが表示されているかを確認
+        response = self.client.get(self.url)  # プロフィールページURLに訪れる動作
+
+        self.assertEqual(response.status_code, 200)  # コード200なのを確認
+        self.assertTemplateUsed(response, "accounts/profile.html")
 
 
 class TestUserProfileEditView(TestCase):

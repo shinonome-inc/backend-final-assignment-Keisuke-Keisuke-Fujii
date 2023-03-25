@@ -1,10 +1,14 @@
 from django.conf import settings
-from django.contrib.auth import authenticate, login
+from django.contrib.auth import authenticate, get_user_model, login
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.urls import reverse_lazy
-from django.views.generic import CreateView, TemplateView
+from django.views.generic import CreateView, DetailView
+
+from tweets.models import Tweet
 
 from .forms import SignupForm
+
+CustomUser = get_user_model()
 
 # SignUpViewではユーザ作成機能，作成されたユーザのログイン機能を実装する
 
@@ -28,5 +32,19 @@ class SignupView(CreateView):
         return response
 
 
-class UserProfileView(LoginRequiredMixin, TemplateView):
+class UserProfileView(LoginRequiredMixin, DetailView):
     template_name = "accounts/profile.html"
+    model = CustomUser
+    context_object_name = "profile"
+    slug_field = "username"  # モデルのフィールドの名前
+    slug_url_kwarg = "username"  # urls.pyでのキーワードの名前すなわち任意のユーザ名
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        user = self.object
+        context["tweet_list"] = (
+            Tweet.objects.select_related("user")
+            .filter(user=user)
+            .order_by("-created_at")
+        )
+        return context
