@@ -11,7 +11,7 @@ CustomUser = get_user_model()
 class TestSignupView(TestCase):
     # test用のログインデータ
     def setUp(self):
-        # アカウントを登録するurlページへの逆引き
+        # アカウントを登録するurlページへの逆引き文字列
         self.url = reverse("accounts:signup")
 
     def test_success_get(self):
@@ -23,9 +23,9 @@ class TestSignupView(TestCase):
 
     def test_success_post(self):
         """
-        responseはユーザーがフォームにデータを打ち込んでユーザー登録ボタンを押した操作
-        第二引数データdataを持って,第一引数のurlであるself.url（SetUpメソッドで定めたsignup成功時の遷移先url）に
-        遷移する操作を示す
+        responseはユーザーがフォームにデータを打ち込んでユーザー登録ボタンを押し送信した操作
+        第二引数データdataを,第一引数のurlページであるself.url（SetUpメソッドで定めたsignupフォームのあるurl）にある
+        フォームで送る操作を示す
         """
         data = {
             "username": "testuser",

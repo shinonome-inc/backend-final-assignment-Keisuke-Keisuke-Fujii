@@ -1,4 +1,4 @@
-from django.contrib.auth import get_user_model
+from django.contrib.auth import SESSION_KEY, get_user_model
 from django.test import TestCase
 from django.urls import reverse
 
@@ -61,7 +61,32 @@ class TestTweetCreateView(TestCase):
         self.assertTemplateUsed(response, "tweets/tweet_create.html")
 
     def test_success_post(self):
-        pass
+        """
+        ・Response Status Code: 302
+        ・ホームにリダイレクトしている
+        ・DBにデータが追加されている
+        ・追加されたデータのcontentが送信されたcontentと同一である
+        """
+
+        test_tweet = {"content": "testtweet"}
+        # test_tweetにTweetモデルのcontentフィールドに追加するためのtweetデータを格納
+        response = self.client.post(self.url, test_tweet)
+        """
+        responseはユーザーがフォームにデータを打ち込んで送信した操作
+        第二引数データtest_tweet(ツイート内容)を,第一引数のページであるself.url(SetUpメソッドで定めた)にある
+        フォームで送る操作を示す.
+        """
+
+        # responseにより登録されたデータが存在していることを確認
+        self.assertRedirects(
+            response,  # responseという操作（インスタンス？）が，
+            reverse("tweets:home"),  # ツイート成功後のURLへ
+            status_code=302,  # リダイレクトが成功し
+            target_status_code=200,  # 画面表示もOKである
+        )
+        # test_tweetがTweetモデルのcontentフィールドに存在しているか確認
+        self.assertTrue(Tweet.objects.filter(content=test_tweet["content"]).exists())
+        self.assertIn(SESSION_KEY, self.client.session)
 
     def test_failure_post_with_empty_content(self):
         pass
