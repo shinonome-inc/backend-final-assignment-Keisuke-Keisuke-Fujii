@@ -3,13 +3,15 @@ from django.contrib.auth import SESSION_KEY, get_user_model
 from django.test import TestCase
 from django.urls import reverse
 
+from tweets.models import Tweet
+
 CustomUser = get_user_model()
 
 
 class TestSignupView(TestCase):
     # test用のログインデータ
     def setUp(self):
-        # アカウントを登録するurlページへの逆引き
+        # アカウントを登録するurlページへの逆引き文字列
         self.url = reverse("accounts:signup")
 
     def test_success_get(self):
@@ -21,9 +23,9 @@ class TestSignupView(TestCase):
 
     def test_success_post(self):
         """
-        responseはユーザーがフォームにデータを打ち込んでユーザー登録ボタンを押した操作
-        第二引数データdataを持って,第一引数のurlであるself.url（SetUpメソッドで定めたsignup成功時の遷移先url）に
-        遷移する操作を示す
+        responseはユーザーがフォームにデータを打ち込んでユーザー登録ボタンを押し送信した操作
+        第二引数データdataを,第一引数のurlページであるself.url（SetUpメソッドで定めたsignupフォームのあるurl）にある
+        フォームで送る操作を示す
         """
         data = {
             "username": "testuser",
@@ -36,9 +38,7 @@ class TestSignupView(TestCase):
         # responseにより登録されたデータが存在していることを確認
         self.assertRedirects(
             response,  # responseという操作（インスタンス？）が，
-            reverse(
-                settings.LOGIN_REDIRECT_URL
-            ),  # reverse逆引URL(LOGIN_REDIRECT_URL=tweets:home)へ
+            reverse(settings.LOGIN_REDIRECT_URL),  # reverse逆引URL(LOGIN_REDIRECT_URL=tweets:home)へ
             status_code=302,  # ちゃんとリダイレクトという動きが行われ
             target_status_code=200,  # 画面表示がOKである
         )
@@ -249,7 +249,7 @@ class TestUserLoginView(TestCase):
         response = self.client.get(self.url)  # accounts/login/ のURLに訪れる動作
 
         self.assertEqual(response.status_code, 200)  # コード200なのを確認
-        self.assertTemplateUsed(response, "accounts/login.html")
+        self.assertTemplateUsed(response, "accounts/login.html")  # ログインテンプレートhtmlが表示されているかを確認
 
     def test_success_post(self):
         login_success_post_data = {
@@ -316,8 +316,46 @@ class TestUserLogoutView(TestCase):
 
 
 class TestUserProfileView(TestCase):
+    def setUp(self):
+        # ログイン後の画面なのでログイン用テストユーザ作成
+        # ログインするユーザのデータをモデルに追加して既存ユーザ扱いにする
+        self.user1 = CustomUser.objects.create_user(
+            username="testuser1",
+            password="testpassword1",
+            email="test1@example.com",
+        )
+        # フォロー機能などで後々self.user2を作るらしい
+
+        # ログインさせる
+        self.client.login(username="testuser1", password="testpassword1")
+
+        # プロフィール画面url文字列の逆引き
+        self.url = reverse(
+            "accounts:user_profile", kwargs={"username": self.user1.username}
+        )  # urls.pyでstr:usernameとなっているのでキーはusernameになる。
+
+        # ツイート投稿させる
+        Tweet.objects.create(user=self.user1, content="testpost")
+
     def test_success_get(self):
-        pass
+        """
+        該当ユーザーのツイート一覧取得
+        ・context内に含まれるツイート一覧が、DBに保存されている該当のユーザーのツイート一覧と同一である
+        """
+        # ↓ユーザーがaccounts/<str:username>/ のURLに訪れているか確認
+        response = self.client.get(self.url)  # プロフィールページURLに訪れる動作
+
+        # プロフィール画面に存在する全てのcontextすなわち特定ユーザのツイートやフォロー数などの全ての要素
+        context = response.context
+
+        self.assertEqual(response.status_code, 200)  # コード200なのを確認
+        self.assertTemplateUsed(response, "accounts/profile.html")  # プロフィールテンプレートhtmlが表示されているかを確認
+        self.assertQuerysetEqual(context["tweet_list"], Tweet.objects.filter(user=self.user1))
+        """
+        レスポンスに想定通りのquerysetが含まれているか,全ユーザのツイート一覧とクエリが等しいか確認
+        tweet_listはaccounts/views.UserProfileViewのget_context_data内のcontext[tweet_list]
+        context["tweet_list"]はプロフィール画面で表示されるツイート一覧のコンテキスト形式
+        """
 
 
 class TestUserProfileEditView(TestCase):

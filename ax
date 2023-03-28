@@ -1,0 +1,29 @@
+[33md3a451f[m[33m ([m[1;36mHEAD -> [m[1;32mfeature/login[m[33m, [m[1;31morigin/feature/login[m[33m)[m 修正
+[33m44037fc[m 削除:accounts.viewsのimport欄を整理
+[33mede6b54[m 修正:accountsのurlsviewsのimport修正,viewsのLogoutViewとLoginView削除,as_viewメソッド修正
+[33m6812409[m 修正:UserLogoutViewを削除，accounts.urlsのログアウトのpathのviewをデフォルトのLogoutViewに変更
+[33m9913253[m 修正:LoginForm記述追加，UserLogoutViewのtemplate_nameを修正，accounts.urlsのauth_viewを削除
+[33mecbe6a4[m 修正:ログアウトの隣のユーザプロフィールへの遷移ボタンに関するhtml記述を修正
+[33m088947f[m 修正:ログアウトの隣のユーザプロフィールへの遷移ボタンを修正
+[33me862adf[m 追加:プロフィール画面とログアウトの隣のユーザプロフィールへの遷移ボタンを追加
+[33m139eeb8[m 修正:ログイン後にTwitter clone押下でtweets:homeに遷移するよう修正
+[33m2d84aa2[m 修正:トップ(ローカルホストURL)画面のヘッダを追加
+[33m6c7f99f[m 修正:ヘッダを修正
+[33ma184071[m 追加:ログインとログアウト機能を追加
+[33m78855b5[m[33m ([m[1;31morigin/main[m[33m, [m[1;31morigin/HEAD[m[33m, [m[1;32mmain[m[33m)[m Merge pull request #1 from shinonome-inc/feature/signup
+[33m6949f01[m 修正:コメント量を減らす
+[33mc806a59[m 修正
+[33md9fca4b[m 修正:176行目などをself.assertEqual(CustomUser.objects.all().count(), 0)と修正
+[33mbf01304[m 修正:mysite.settingsのAUTH_PASSWORD_VALIDATORSの98行目の2行に渡っていた箇所を修正
+[33ma6eb7e5[m 修正
+[33mcd2cc5c[m 修正:duplicated_dataのtestを見やすく
+[33mebedd62[m 修正:duplicated_dataのtest
+[33md2dac2a[m 修正:User.countへの代入とresponseの順番
+[33me174263[m サインアップのテスト書き終えた
+[33me73a389[m test_failure_post_with_duplicated_userまで書いた
+[33m8a24179[m test_failure_post_with_empty_passwordまで書いた
+[33m34adf04[m test_failure_post_with_empty_emailまで書いた
+[33m210bb1c[m accounts/test.pyの不要なprint分を削除
+[33md854d89[m accounts/views.pyの不要な引数usernameとpasswordを削除
+[33m79947f8[m サインアップ機能の追加
+[33m7b4316d[m Initial commit

@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+{% block title %}Delete tweet削除{% endblock %}
+
+{% block content %}
+<h3>ツイート削除</h3>
+<form method="post">
+    {% csrf_token %}
+    <p>{{ tweet.user.username }}</p> <!-- これはTweetモデルのuser属性に含まれるusernameフィールド．usernameフィールドはCustomUserから来ている -->
+    <p>{{ tweet.content }}</p>
+    <p>を削除しますか？</p>
+    <button type="submit">削除する</button>
+</form>
+<a href="{% url 'tweets:detail' tweet.pk %}">キャンセル</a>
+{% endblock %}

@@ -12,12 +12,13 @@
     <div>
         {% if request.user.is_authenticated %}
         <h3><a href="{% url 'tweets:home' %}">Twitter Clone</a></h3>
-        <a href="{% url 'accounts:logout'%}">ログアウトする</a>
         <a href="{% url 'accounts:user_profile' user.username %}"><button type="button">{{ user.username }}</button></a>
+        <a href="{% url 'tweets:create' %}">ツイート作成</a>
+        <a href="{% url 'accounts:logout' %}">ログアウトする</a>
         {% else %}
-        <h3><a href="{% url 'welcome:index'%}">Twitter Clone</a></h3>
-        <a href="{% url 'accounts:login'%}">ログインページ</a>
-        <a href="{% url 'accounts:signup'%}">新規登録</a>
+        <h3><a href="{% url 'welcome:index' %}">Twitter Clone</a></h3>
+        <a href="{% url 'accounts:login' %}">ログインページ</a>
+        <a href="{% url 'accounts:signup' %}">新規登録</a>
         {% endif %}
     </div>
     {% block content %}
