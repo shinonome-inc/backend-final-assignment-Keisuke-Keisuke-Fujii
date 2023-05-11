@@ -8,4 +8,4 @@ class CustomUser(AbstractUser):
 
 
 # class FriendShip(models.Model):
-# pass
+# passa
