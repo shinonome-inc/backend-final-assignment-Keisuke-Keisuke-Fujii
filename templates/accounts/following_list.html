@@ -1,0 +1,20 @@
+<!-- templates/accounts/following_list.html -->
+{% extends 'base.html' %}
+
+{% block title %}フォローリスト{% endblock %}
+
+{% block content %}
+
+<!-- usernameタグは viewでのcontext["username"]-->
+<h2>{{ username }} さんのフォローリスト</h2>
+<ul>
+	<!-- for文で登録内容があるかないかの判定. emptyはforで参照したリストが空の時の場合分け. if文のelseみたいな -->
+	{% for friend in following_list %}
+	<li>{{ friend.following.username }}</li>
+	{% empty %}
+	<li>{{ username }} さんは誰もフォローしていません</li>
+	{% endfor %}
+</ul>
+
+<a href="{% url 'accounts:user_profile' username %}">戻る</a>
+{% endblock %}
