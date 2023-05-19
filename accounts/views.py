@@ -128,3 +128,18 @@ class FollowingListView(LoginRequiredMixin, ListView):
             .order_by("-created_at")
         )
         return context
+
+
+class FollowerListView(LoginRequiredMixin, ListView):
+    model = CustomUser
+    template_name = "accounts/follower_list.html"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["username"] = self.kwargs["username"]
+        context["follower_list"] = (
+            FriendShip.objects.select_related("follower")
+            .filter(following__username=self.kwargs["username"])
+            .order_by("-created_at")
+        )
+        return context
