@@ -7,6 +7,7 @@ from django.views.generic import CreateView, DetailView
 from tweets.models import Tweet
 
 from .forms import SignupForm
+from .models import FriendShip
 
 CustomUser = get_user_model()
 
@@ -41,6 +42,15 @@ class UserProfileView(LoginRequiredMixin, DetailView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+
+        # テンプレートで表示されているユーザ
         user = self.object
         context["tweet_list"] = Tweet.objects.select_related("user").filter(user=user).order_by("-created_at")
+
+        # filter(follower=user)は,Tweetモデルのfollower変数にuserを格納してTweetモデルのfollowerフィールドの該当ユーザに絞る
+        # following_countコンテキストは、FriendShipモデル(フォロー関係)のデータの中で、self.objectのユーザがフォロワーに
+        context["following_count"] = FriendShip.objects.filter(follower=user).count()
+        context["follower_count"] = FriendShip.objects.filter(following=user).count()
+
+        context["connected"] = FriendShip.objects.filter(following=user, follower=self.request.user).exists()
         return context
