@@ -4,7 +4,7 @@ from django.contrib.auth import authenticate, get_user_model, login
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.shortcuts import get_object_or_404, render
 from django.urls import reverse_lazy
-from django.views.generic import CreateView, DetailView, TemplateView
+from django.views.generic import CreateView, DetailView, ListView, TemplateView
 
 from tweets.models import Tweet
 
@@ -113,3 +113,18 @@ class UnFollowView(LoginRequiredMixin, TemplateView):
         else:
             messages.warning(request, "フォローしていない人や、自分自身をフォロー解除できません。")
             return render(request, "accounts/unfollow.html")
+
+
+class FollowingListView(LoginRequiredMixin, ListView):
+    model = CustomUser
+    template_name = "accounts/following_list.html"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["username"] = self.kwargs["username"]
+        context["following_list"] = (
+            FriendShip.objects.select_related("following")
+            .filter(follower__username=self.kwargs["username"])
+            .order_by("-created_at")
+        )
+        return context
