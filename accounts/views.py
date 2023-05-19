@@ -93,3 +93,23 @@ class FollowView(LoginRequiredMixin, TemplateView):
             # フォロー後にユーザーをホーム画面にリダイレクトする
             # return HttpResponseRedirect(reverse_lazy("tweets:home")) とも書ける。
             return render(request, "accounts/follow.html")
+
+
+class UnFollowView(LoginRequiredMixin, TemplateView):
+    template_name = "accounts/unfollow.html"
+    model = FriendShip
+
+    def post(self, request, *args, **kwargs):
+        follower = self.request.user
+        following = get_object_or_404(CustomUser, username=self.kwargs["username"])
+
+        # セイウチ演算子(Walrus operator)を用い、セイウチ演算子：代入文 → 代入式として使えるようにした
+        # 特にif文においては、代入と評価を同時に行うことが出来るようになる。
+        if friend := FriendShip.objects.filter(following=following, follower=follower):
+            friend.delete()
+            messages.success(request, f"{ following.username }さんのフォローを解除しました。")
+            return render(request, "accounts/unfollow.html")
+
+        else:
+            messages.warning(request, "フォローしていない人や、自分自身をフォロー解除できません。")
+            return render(request, "accounts/unfollow.html")
