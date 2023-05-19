@@ -5,7 +5,21 @@
 {% block content %}
 <div>
     <h1>{{ profile.username }}のプロフィール</h1>
+    <p><a href="{% url 'accounts:following_list' profile.username %}">フォロー数：{{ following_count }}</a></p>
+    <p><a href="{% url 'accounts:follower_list' profile.username %}">フォロワー数：{{ follower_count }}</a></p>
+
+    {% if profile.username == user.username %}
+    <p>ここはあなた自身のプロフィール画面です。</p>
+
+    {% elif mutual_follow %}
+    <p>相互フォロー</p>
+    <a href="{% url 'accounts:unfollow' profile.username %}"><button type="button">フォロー解除</button></a>
+
+    {% else %}
+    <a href=" {% url 'accounts:follow' profile.username %}"><button type="button">フォローする</button></a>
+    {% endif %}
 </div>
+
 {% if tweet_list %}
 {% for tweet in tweet_list %}
 <div>
