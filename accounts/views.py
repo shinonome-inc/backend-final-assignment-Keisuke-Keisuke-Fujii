@@ -1,8 +1,10 @@
 from django.conf import settings
+from django.contrib import messages
 from django.contrib.auth import authenticate, get_user_model, login
 from django.contrib.auth.mixins import LoginRequiredMixin
+from django.shortcuts import get_object_or_404, render
 from django.urls import reverse_lazy
-from django.views.generic import CreateView, DetailView
+from django.views.generic import CreateView, DetailView, TemplateView
 
 from tweets.models import Tweet
 
@@ -54,3 +56,40 @@ class UserProfileView(LoginRequiredMixin, DetailView):
 
         context["connected"] = FriendShip.objects.filter(following=user, follower=self.request.user).exists()
         return context
+
+
+class FollowView(LoginRequiredMixin, TemplateView):
+    template_name = "accounts/follow.html"
+    model = FriendShip
+
+    # HTTP POSTリクエストを処理。この時のリクエストはフォローをするという動作
+    def post(self, request, *args, **kwargs):
+        # リクエストを送信（フォロー申請）したユーザを格納
+        follower = self.request.user
+
+        # フォロー申請されたユーザを格納
+        # POSTで送信されたusername(ユーザ名)をもつCustomUserモデルオブジェクトが見つかればそれを取得。
+        # オブジェクトが見つからない場合、404エラーを返す。
+        following = get_object_or_404(CustomUser, username=self.kwargs["username"])
+
+        # ユーザーが自分自身をフォローしようとしている場合の処理を行う。
+        if following == follower:
+            # メッセージフレームワークによる様々なメッセージを出す
+            messages.warning(request, "自分自身はフォローできません。")
+
+            # 失敗したので特定の画面に戻す。メッセージを表示させるのでレンダリングで戻す？
+            return render(request, "accounts/follow.html")
+
+        # すでにフォローしている場合の処理を行う
+        elif FriendShip.objects.filter(following=following, follower=follower).exists():
+            messages.warning(request, f"すでに{ following.username }さんをフォローしています。")
+            return render(request, "accounts/follow.html")
+
+        # 新しいフォロー関係を作成する(フォロー成功)
+        else:
+            FriendShip.objects.create(following=following, follower=follower)
+            messages.success(request, f"{ following.username }さんをフォローしました。")
+
+            # フォロー後にユーザーをホーム画面にリダイレクトする
+            # return HttpResponseRedirect(reverse_lazy("tweets:home")) とも書ける。
+            return render(request, "accounts/follow.html")
