@@ -1,0 +1,30 @@
+{% extends 'base.html' %}
+{% block title %} フォロー {% endblock %}
+{% block content %}
+<div>
+	<h1>フォロー確認画面</h1>
+</div>
+
+<div>
+	{% if username %}
+	<p>{{ username }}さんをフォローしますか?</p>
+	{% endif %}
+	<form method="post">
+		{% csrf_token %}
+		<button type="submit">フォローする</button>
+	</form>
+</div>
+
+<div>
+	{% if messages %}
+	<ul class="messages">
+		{% for message in messages %}
+		<li {%if messages.tags %} class="{{messages.tags}}" {% endif %}>
+			{{message}}
+		</li>
+		{% endfor %}
+	</ul>
+	{% endif %}
+	<a href="{% url 'tweets:home' %}">戻る</a>
+</div>
+{% endblock %}
