@@ -20,6 +20,16 @@
         <a href="{% url 'accounts:login' %}">ログインページ</a>
         <a href="{% url 'accounts:signup' %}">新規登録</a>
         {% endif %}
+
+        {% if messages %}
+        <ul class="messages">
+            {% for message in messages %}
+            <li {% if messages.tags %} class="{{messages.tags}}" {% endif %}>
+                {{message}}
+            </li>
+            {% endfor %}
+        </ul>
+        {% endif %}
     </div>
     {% block content %}
     {% endblock %}
