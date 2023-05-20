@@ -15,6 +15,14 @@
     <p>相互フォロー</p>
     <a href="{% url 'accounts:unfollow' profile.username %}"><button type="button">フォロー解除</button></a>
 
+    {% elif login_user_follows_template_user %}
+    <p>フォロー中</p>
+    <a href=" {% url 'accounts:unfollow' profile.username %}"><button type="button">フォロー解除</button></a>
+
+    {% elif template_user_follows_login_user %}
+    <p>フォローされています</p>
+    <a href=" {% url 'accounts:follow' profile.username %}"><button type="button">フォローする</button></a>
+
     {% else %}
     <a href=" {% url 'accounts:follow' profile.username %}"><button type="button">フォローする</button></a>
     {% endif %}

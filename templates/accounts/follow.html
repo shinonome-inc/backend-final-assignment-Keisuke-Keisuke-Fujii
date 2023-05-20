@@ -13,18 +13,18 @@
 		{% csrf_token %}
 		<button type="submit">フォローする</button>
 	</form>
-</div>
-
-<div>
+	<!--
 	{% if messages %}
 	<ul class="messages">
 		{% for message in messages %}
-		<li {%if messages.tags %} class="{{messages.tags}}" {% endif %}>
+		<li {% if messages.tags %} class="{{messages.tags}}" {% endif %}>
 			{{message}}
 		</li>
 		{% endfor %}
 	</ul>
 	{% endif %}
-	<a href="{% url 'tweets:home' %}">戻る</a>
+	-->
+
+	<a href="{% url 'accounts:user_profile' username %}">戻る</a>
 </div>
 {% endblock %}

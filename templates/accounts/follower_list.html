@@ -10,9 +10,13 @@
 <ul>
 	<!-- for文で登録内容があるかないかの判定. emptyはforで参照したリストが空の時の場合分け. if文のelseみたいな -->
 	{% for friend in follower_list %}
-	<li>{{ friend.follower.username }}</li>
+	<li>
+		<a href="{% url 'accounts:user_profile' friend.follower.username %}">{{ friend.follower.username }}</a>
+	</li>
 	{% empty %}
-	<li>{{ username }} さんのフォロワーはいません</li>
+	<li>
+		<a href="{% url 'accounts:user_profile' username %}">{{ username }}</a> さんのフォロワーはいません
+	</li>
 	{% endfor %}
 </ul>
 
