@@ -2,6 +2,7 @@ from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth import authenticate, get_user_model, login
 from django.contrib.auth.mixins import LoginRequiredMixin
+from django.db.models import Q
 from django.shortcuts import get_object_or_404, render
 from django.urls import reverse_lazy
 from django.views.generic import CreateView, DetailView, ListView, TemplateView
@@ -54,7 +55,16 @@ class UserProfileView(LoginRequiredMixin, DetailView):
         context["following_count"] = FriendShip.objects.filter(follower=user).count()
         context["follower_count"] = FriendShip.objects.filter(following=user).count()
 
-        context["connected"] = FriendShip.objects.filter(following=user, follower=self.request.user).exists()
+        context["login_user_follows_template_user"] = FriendShip.objects.filter(
+            following=user, follower=self.request.user
+        ).exists()
+        context["template_user_follows_login_user"] = FriendShip.objects.filter(
+            following=self.request.user, follower=user
+        ).exists()
+        context["mutual_follow"] = FriendShip.objects.filter(
+            Q(following=user, follower=self.request.user) & Q(following=self.request.user, follower=user)
+        ).exists()
+
         return context
 
 
@@ -78,21 +88,25 @@ class FollowView(LoginRequiredMixin, TemplateView):
             messages.warning(request, "自分自身はフォローできません。")
 
             # 失敗したので特定の画面に戻す。メッセージを表示させるのでレンダリングで戻す？
-            return render(request, "accounts/follow.html")
+            return render(request, "tweets/home.html")
 
         # すでにフォローしている場合の処理を行う
         elif FriendShip.objects.filter(following=following, follower=follower).exists():
-            messages.warning(request, f"すでに{ following.username }さんをフォローしています。")
-            return render(request, "accounts/follow.html")
+            messages.warning(request, f"すでに { following.username } さんをフォローしています。")
+            return render(request, "tweets/home.html")
 
         # 新しいフォロー関係を作成する(フォロー成功)
         else:
             FriendShip.objects.create(following=following, follower=follower)
-            messages.success(request, f"{ following.username }さんをフォローしました。")
+            messages.success(request, f"{ following.username } さんをフォローしました。")
 
             # フォロー後にユーザーをホーム画面にリダイレクトする
-            # return HttpResponseRedirect(reverse_lazy("tweets:home")) とも書ける。
+            """
+            return HttpResponseRedirect(reverse_lazy("tweets:home"))
             return render(request, "accounts/follow.html")
+            のどちらか
+            """
+            return render(request, "tweets/home.html")
 
 
 class UnFollowView(LoginRequiredMixin, TemplateView):
@@ -107,12 +121,12 @@ class UnFollowView(LoginRequiredMixin, TemplateView):
         # 特にif文においては、代入と評価を同時に行うことが出来るようになる。
         if friend := FriendShip.objects.filter(following=following, follower=follower):
             friend.delete()
-            messages.success(request, f"{ following.username }さんのフォローを解除しました。")
-            return render(request, "accounts/unfollow.html")
+            messages.success(request, f"{ following.username } さんのフォローを解除しました。")
+            return render(request, "tweets/home.html")
 
         else:
             messages.warning(request, "フォローしていない人や、自分自身をフォロー解除できません。")
-            return render(request, "accounts/unfollow.html")
+            return render(request, "tweets/home.html")
 
 
 class FollowingListView(LoginRequiredMixin, ListView):
