@@ -11,6 +11,9 @@ class FriendShip(models.Model):
     """
     related_nameでORMで参照できるようにする。
     1つのモデルに対し複数のForeignKeyフィールドを設定する場合このオプションが必須
+    フィールドがfollower=Kei, following=Kyokoというレコードがあったら、
+    「KeiがKyokoのことをフォローすることでKyokoのフォロワーになっているという関係」
+    を示す。
     """
 
     follower = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name="follower")

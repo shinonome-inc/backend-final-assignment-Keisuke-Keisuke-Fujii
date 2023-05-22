@@ -50,11 +50,14 @@ class UserProfileView(LoginRequiredMixin, DetailView):
         user = self.object
         context["tweet_list"] = Tweet.objects.select_related("user").filter(user=user).order_by("-created_at")
 
-        # filter(follower=user)は,Tweetモデルのfollower変数にuserを格納してTweetモデルのfollowerフィールドの該当ユーザに絞る
-        # following_countコンテキストは、FriendShipモデル(フォロー関係)のデータの中で、self.objectのユーザがフォロワーに
+        # filter(follower=user)は,モデルのfollower変数にuserを格納してモデルのfollowerフィールドの該当ユーザに絞る.
+        # フォロー数==自分がフォロワーになっている数
+        # フォロワー数==自分がフォローされている数
         context["following_count"] = FriendShip.objects.filter(follower=user).count()
         context["follower_count"] = FriendShip.objects.filter(following=user).count()
 
+        # self.request.userは現在ログインして画面を閲覧しているユーザ。request.userはHTTPrequestを送るユーザという意味。login_user
+        # userはtemplateで表示しているユーザ。template_user
         context["login_user_follows_template_user"] = FriendShip.objects.filter(
             following=user, follower=self.request.user
         ).exists()
@@ -103,8 +106,7 @@ class FollowView(LoginRequiredMixin, TemplateView):
             # フォロー後にユーザーをホーム画面にリダイレクトする
             """
             return HttpResponseRedirect(reverse_lazy("tweets:home"))
-            return render(request, "accounts/follow.html")
-            のどちらか
+            return render(request, "accounts/follow.html")のどちらか
             """
             return render(request, "tweets/home.html")
 
