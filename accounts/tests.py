@@ -5,6 +5,8 @@ from django.urls import reverse
 
 from tweets.models import Tweet
 
+from .models import FriendShip
+
 CustomUser = get_user_model()
 
 
@@ -324,7 +326,13 @@ class TestUserProfileView(TestCase):
             password="testpassword1",
             email="test1@example.com",
         )
-        # フォロー機能などで後々self.user2を作るらしい
+
+        # フォロー機能テストのためself.user2を作る
+        self.user2 = CustomUser.objects.create_user(
+            username="testuser2",
+            password="testpassword2",
+            email="test2@example.com",
+        )
 
         # ログインさせる
         self.client.login(username="testuser1", password="testpassword1")
@@ -337,10 +345,22 @@ class TestUserProfileView(TestCase):
         # ツイート投稿させる
         Tweet.objects.create(user=self.user1, content="testpost")
 
+        # user1がuser2をフォローする
+        FriendShip.objects.create(follower=self.user1, following=self.user2)
+
+        # user2がuser1をフォローする
+        FriendShip.objects.create(follower=self.user2, following=self.user1)
+
     def test_success_get(self):
         """
-        該当ユーザーのツイート一覧取得
-        ・context内に含まれるツイート一覧が、DBに保存されている該当のユーザーのツイート一覧と同一である
+        ツイート機能テスト時
+        品質:該当ユーザーのツイート一覧取得
+        効果:context内に含まれるツイート一覧が、DBに保存されている該当のユーザーのツイート一覧と同一である
+
+        フォロー機能テスト時
+        品質:該当ユーザーのフォロー数・フォロワー数を表示する。
+        効果:context内に含まれるフォロー数とフォロワー数が
+        DBに保存されている該当のユーザーのフォロー数とフォロワー数に同一である
         """
         # ↓ユーザーがaccounts/<str:username>/ のURLに訪れているか確認
         response = self.client.get(self.url)  # プロフィールページURLに訪れる動作
@@ -351,10 +371,14 @@ class TestUserProfileView(TestCase):
         self.assertEqual(response.status_code, 200)  # コード200なのを確認
         self.assertTemplateUsed(response, "accounts/profile.html")  # プロフィールテンプレートhtmlが表示されているかを確認
         self.assertQuerysetEqual(context["tweet_list"], Tweet.objects.filter(user=self.user1))
+        self.assertEqual(context["following_count"], FriendShip.objects.filter(follower=self.user1).count())
+        self.assertEqual(context["follower_count"], FriendShip.objects.filter(following=self.user1).count())
         """
         レスポンスに想定通りのquerysetが含まれているか,全ユーザのツイート一覧とクエリが等しいか確認
         tweet_listはaccounts/views.UserProfileViewのget_context_data内のcontext[tweet_list]
         context["tweet_list"]はプロフィール画面で表示されるツイート一覧のコンテキスト形式
+        context["following_count"]はフォロー数
+        FriendShip.objects.filter(follower=self.user1).count()は自分がフォロワーになっているFriendShipモデルのオブジェクトの数
         """
 
 
