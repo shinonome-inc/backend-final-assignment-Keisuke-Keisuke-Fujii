@@ -24,17 +24,17 @@ class TestSignupView(TestCase):
         self.assertTemplateUsed(response, "accounts/signup.html")
 
     def test_success_post(self):
-        """
-        responseはユーザーがフォームにデータを打ち込んでユーザー登録ボタンを押し送信した操作
-        第二引数データdataを,第一引数のurlページであるself.url（SetUpメソッドで定めたsignupフォームのあるurl）にある
-        フォームで送る操作を示す
-        """
         data = {
             "username": "testuser",
             "email": "test@test.com",
             "password1": "testpassword",
             "password2": "testpassword",
         }
+        """
+        responseはユーザーがフォームにデータを打ち込んでユーザー登録ボタンを押し送信した操作
+        第二引数データdataを,第一引数のurlページであるself.url（SetUpメソッドで定めたsignupフォームのあるurl）にある
+        フォームで送る操作を示す
+        """
         response = self.client.post(self.url, data)
 
         # responseにより登録されたデータが存在していることを確認
@@ -314,6 +314,7 @@ class TestUserLogoutView(TestCase):
             status_code=302,
             target_status_code=200,
         )
+        # ログアウトなのでセッションからログイン情報が消えている確認
         self.assertNotIn(SESSION_KEY, self.client.session)
 
 
@@ -327,7 +328,7 @@ class TestUserProfileView(TestCase):
             email="test1@example.com",
         )
 
-        # フォロー機能テストのためself.user2を作る
+        # フォロー機能（フォロー数）テストのためself.user2を作る
         self.user2 = CustomUser.objects.create_user(
             username="testuser2",
             password="testpassword2",
@@ -397,8 +398,54 @@ class TestUserProfileEditView(TestCase):
 
 
 class TestFollowView(TestCase):
+    def setUp(self):
+        # ログイン後の画面なのでログイン用テストユーザ作成
+        # ログインするユーザのデータをモデルに追加して既存ユーザ扱いにする
+        self.user1 = CustomUser.objects.create_user(
+            username="testuser1",
+            password="testpassword1",
+            email="test1@example.com",
+        )
+
+        # フォロー機能（フォロー動作）テストのため同様にself.user2を作る
+        self.user2 = CustomUser.objects.create_user(
+            username="testuser2",
+            password="testpassword2",
+            email="test2@example.com",
+        )
+
+        # user1をログインさせる
+        self.client.login(username="testuser1", password="testpassword1")
+
+        # フォロー確認画面url文字列の逆引き
+        self.url = reverse(
+            "accounts:follow", kwargs={"username": self.user2.username}
+        )  # urls.pyでstr:usernameとなっているのでキーはusernameになる。
+
     def test_success_post(self):
-        pass
+        """
+        品質:リクエストを送信する
+        効果:
+        ・Response Status Code: 302
+        ・リダイレクト先のStatus Code: 200
+        ・(フォロー成功時に)Homeにリダイレクトしている
+        ・DBにデータが追加されている
+        """
+        self.assertEqual(FriendShip.objects.all().count(), 0)  # まずフォロー関係が一つもないことを確認
+
+        # フォローはフォーム送信で行うが、フォームに何か情報を入力したわけではないので第2引数はNone
+        response = self.client.post(self.url, None)
+
+        self.assertRedirects(
+            response,
+            reverse("tweets:home"),  # response(フォロー)成功後の画面遷移先
+            status_code=302,
+            target_status_code=200,
+        )
+
+        # following=self.user2.usernameではない。FriendShipモデルの該当フィールドに表示されるのはユーザのidのため
+        self.assertTrue(FriendShip.objects.filter(following=self.user2, follower=self.user1).exists())
+        self.assertIn(SESSION_KEY, self.client.session)
 
     def test_failure_post_with_not_exist_user(self):
         pass
