@@ -25,6 +25,11 @@
 	{% endif %}
 	-->
 
-	<a href="{% url 'accounts:user_profile' username %}">戻る</a>
+	<a href="{% url 'tweets:home' %}">戻る</a>
+	<!-- ここの戻るのリンクを url 'accounts:user_profile' username などとフォローしようとしたユーザのプロフィール画面にしようとすると
+	NoReverseMatch at /accounts/Kyoko/follow/
+	Reverse for 'user_profile' with arguments '('',)' not found. 1 pattern(s) tried: ['accounts/(?P<username>[^/]+)/\\Z']
+	というエラーが出る。解消にはどうしたらよいか？
+	-->
 </div>
 {% endblock %}
