@@ -25,7 +25,7 @@
         <ul class="messages">
             {% for message in messages %}
             <li {% if messages.tags %} class="{{messages.tags}}" {% endif %}>
-                {{message}}
+                <h2>{{message}}</h2>
             </li>
             {% endfor %}
         </ul>
