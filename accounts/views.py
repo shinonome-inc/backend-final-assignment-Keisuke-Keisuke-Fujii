@@ -3,6 +3,7 @@ from django.contrib import messages
 from django.contrib.auth import authenticate, get_user_model, login
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.db.models import Q
+from django.http import HttpResponseRedirect
 from django.shortcuts import get_object_or_404, render
 from django.urls import reverse_lazy
 from django.views.generic import CreateView, DetailView, ListView, TemplateView
@@ -90,13 +91,13 @@ class FollowView(LoginRequiredMixin, TemplateView):
             # メッセージフレームワークによる様々なメッセージを出す
             messages.warning(request, "自分自身はフォローできません。")
 
-            # 失敗したので特定の画面に戻す。メッセージを表示させるのでレンダリングで戻す？
-            return render(request, "tweets/home.html")
+            # 失敗したので特定の画面に戻す。メッセージを表示させるだけでURLを変更する必要はないのでレンダリングで戻す
+            return render(request, "accounts/follow.html")
 
         # すでにフォローしている場合の処理を行う
         elif FriendShip.objects.filter(following=following, follower=follower).exists():
             messages.warning(request, f"すでに { following.username } さんをフォローしています。")
-            return render(request, "tweets/home.html")
+            return render(request, "accounts/follow.html")
 
         # 新しいフォロー関係を作成する(フォロー成功)
         else:
@@ -104,11 +105,9 @@ class FollowView(LoginRequiredMixin, TemplateView):
             messages.success(request, f"{ following.username } さんをフォローしました。")
 
             # フォロー後にユーザーをホーム画面にリダイレクトする
-            """
+            # HttpResponseRedirectはURL自体を変えて画面を遷移させる
+            # renderはURLはそのままに画面表示内容(テンプレート)だけ書き変える。同じURLでmessageだけ表示しなおしたい時などに使う
             return HttpResponseRedirect(reverse_lazy("tweets:home"))
-            return render(request, "accounts/follow.html")のどちらか
-            """
-            return render(request, "tweets/home.html")
 
 
 class UnFollowView(LoginRequiredMixin, TemplateView):
@@ -124,11 +123,11 @@ class UnFollowView(LoginRequiredMixin, TemplateView):
         if friend := FriendShip.objects.filter(following=following, follower=follower):
             friend.delete()
             messages.success(request, f"{ following.username } さんのフォローを解除しました。")
-            return render(request, "tweets/home.html")
+            return HttpResponseRedirect(reverse_lazy("tweets:home"))
 
         else:
             messages.warning(request, "フォローしていない人や、自分自身をフォロー解除できません。")
-            return render(request, "tweets/home.html")
+            return render(request, "accounts/unfollow.html")
 
 
 class FollowingListView(LoginRequiredMixin, ListView):
