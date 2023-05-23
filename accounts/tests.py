@@ -448,7 +448,17 @@ class TestFollowView(TestCase):
         self.assertIn(SESSION_KEY, self.client.session)
 
     def test_failure_post_with_not_exist_user(self):
-        pass
+        """
+        品質:存在しないユーザーに対してリクエストを送信する。
+        効果:
+        ・Response Status Code: 404
+        ・DBにレコードが追加されていない
+        """
+        # self.assertFalse(FriendShip.objects.exists())とself.assertEqual(FriendShip.objects.all().count(), 0)は実質同じ
+        self.assertEqual(FriendShip.objects.all().count(), 0)
+        response = self.client.post(reverse("accounts:follow", kwargs={"username": "not_exist_user"}), None)
+        self.assertEqual(response.status_code, 404)
+        self.assertFalse(FriendShip.objects.exists())
 
     def test_failure_post_with_self(self):
         pass
