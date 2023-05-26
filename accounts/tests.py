@@ -568,8 +568,20 @@ class TestUnfollowView(TestCase):
         self.assertEqual(response.status_code, 404)
         self.assertEqual(FriendShip.objects.all().count(), 1)
 
-    def test_failure_post_with_incorrect_user(self):
-        pass
+    def test_failure_post_with_self(self):
+        """
+        品質:自分自身に（フォロー解除の）リクエストを送信する
+        効果:
+        ・Response Status Code: 200
+        ・DBのデータが削除されていない
+        """
+        self.assertEqual(FriendShip.objects.all().count(), 1)
+        response = self.client.post(reverse("accounts:unfollow", kwargs={"username": self.user1.username}), None)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(FriendShip.objects.all().count(), 1)
+        messages = list(get_messages(response.wsgi_request))
+        message = str(messages[0])
+        self.assertIn("フォローしていない人や、自分自身をフォロー解除できません。", message)
 
 
 class TestFollowingListView(TestCase):
