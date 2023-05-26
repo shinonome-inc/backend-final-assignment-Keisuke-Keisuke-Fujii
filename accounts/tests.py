@@ -557,7 +557,16 @@ class TestUnfollowView(TestCase):
         self.assertIn(f"{ self.user2.username }さんのフォローを解除しました。", message)
 
     def test_failure_post_with_not_exist_tweet(self):
-        pass
+        """
+        品質:存在しないユーザに対して（フォロー解除の）リクエストを送信する
+        効果:
+        ・Response Status Code: 404
+        ・DBのデータが削除されていない
+        """
+        self.assertEqual(FriendShip.objects.all().count(), 1)
+        response = self.client.post(reverse("accounts:unfollow", kwargs={"username": "not_exist_user"}), None)
+        self.assertEqual(response.status_code, 404)
+        self.assertEqual(FriendShip.objects.all().count(), 1)
 
     def test_failure_post_with_incorrect_user(self):
         pass
