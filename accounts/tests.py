@@ -1,5 +1,6 @@
 from django.conf import settings
 from django.contrib.auth import SESSION_KEY, get_user_model
+from django.contrib.messages import get_messages
 from django.test import TestCase
 from django.urls import reverse
 
@@ -417,7 +418,7 @@ class TestFollowView(TestCase):
         # user1をログインさせる
         self.client.login(username="testuser1", password="testpassword1")
 
-        # フォロー確認画面url文字列の逆引き
+        # 他のユーザへのフォロー確認画面url文字列の逆引き
         self.url = reverse(
             "accounts:follow", kwargs={"username": self.user2.username}
         )  # urls.pyでstr:usernameとなっているのでキーはusernameになる。
@@ -445,11 +446,20 @@ class TestFollowView(TestCase):
 
         # following=self.user2.usernameではない。FriendShipモデルの該当フィールドに表示されるのはユーザのidのため
         self.assertTrue(FriendShip.objects.filter(following=self.user2, follower=self.user1).exists())
+
+        # 以下はメッセージのテスト
+        messages = list(get_messages(response.wsgi_request))
+
+        # messages[1]だとエラー.list index out of range.同一メソッド内の最初のメッセージ群だから[0]?
+        message = str(messages[0])
+
+        # self.assertEqualを使うのでも可.
+        self.assertIn(f"{ self.user2.username }さんをフォローしました。", message)
         self.assertIn(SESSION_KEY, self.client.session)
 
     def test_failure_post_with_not_exist_user(self):
         """
-        品質:存在しないユーザーに対してリクエストを送信する。
+        品質:存在しないユーザーに対して(フォローの)リクエストを送信する。
         効果:
         ・Response Status Code: 404
         ・DBにレコードが追加されていない
@@ -461,12 +471,90 @@ class TestFollowView(TestCase):
         self.assertFalse(FriendShip.objects.exists())
 
     def test_failure_post_with_self(self):
-        pass
+        """
+        品質:自分自身に対して（フォローの）リクエスト送信
+        効果:
+        ・Response Status Code: 200
+        ・DBにレコードが追加されていない
+        """
+        self.assertEqual(FriendShip.objects.all().count(), 0)
+
+        # 自分自身へのフォロー確認画面url文字列の逆引き
+        response = self.client.post(reverse("accounts:follow", kwargs={"username": self.user1.username}), None)
+        self.assertEqual(response.status_code, 200)
+        self.assertFalse(FriendShip.objects.exists())
+
+        # 以下はメッセージのテスト
+        messages = list(get_messages(response.wsgi_request))
+
+        # messages[1]だとエラー.list index out of range.同一メソッド内の最初のメッセージ群だから[0]?
+        message = str(messages[0])
+
+        # self.assertEqual(message, "自分自身はフォローできません。")でも可.
+        self.assertIn("自分自身はフォローできません。", message)
 
 
 class TestUnfollowView(TestCase):
+    def setUp(self):
+        # ログイン後の画面なのでログイン用テストユーザ作成
+        # ログインするユーザのデータをモデルに追加して既存ユーザ扱いにする
+        self.user1 = CustomUser.objects.create_user(
+            username="testuser1",
+            password="testpassword1",
+            email="test1@example.com",
+        )
+
+        # フォロー機能（フォロー動作）テストのため同様にself.user2を作る
+        self.user2 = CustomUser.objects.create_user(
+            username="testuser2",
+            password="testpassword2",
+            email="test2@example.com",
+        )
+
+        # user1をログインさせる
+        self.client.login(username="testuser1", password="testpassword1")
+
+        # 他のユーザへのフォロー解除確認画面url文字列の逆引き
+        self.url = reverse(
+            "accounts:unfollow", kwargs={"username": self.user2.username}
+        )  # urls.pyでstr:usernameとなっているのでキーはusernameになる。
+
+        # user1がuser2をフォローする
+        FriendShip.objects.create(follower=self.user1, following=self.user2)
+
     def test_success_post(self):
-        pass
+        """
+        品質:（フォロー解除）リクエストを送信する
+        効果:
+        ・Response Status Code: 302
+        ・リダイレクト先のStatus Code: 200
+        ・（フォロー解除成功時に）Homeにリダイレクトしている
+        ・DBのデータが削除されている
+        """
+
+        # まずuser1がuser2をフォロー中であることを確認
+        self.assertTrue(FriendShip.objects.filter(following=self.user2, follower=self.user1).exists())
+
+        # フォローはフォーム送信で行うが、フォームに何か情報を入力したわけではないので第2引数はNone
+        response = self.client.post(self.url, None)
+
+        self.assertRedirects(
+            response,
+            reverse("tweets:home"),  # response(フォロー)成功後の画面遷移先
+            status_code=302,
+            target_status_code=200,
+        )
+        self.assertFalse(FriendShip.objects.filter(following=self.user2, follower=self.user1).exists())
+        self.assertIn(SESSION_KEY, self.client.session)
+
+        # 以下はメッセージのテスト
+        messages = list(get_messages(response.wsgi_request))
+
+        # messages[1]だとエラー.list index out of range.同一メソッド内の最初のメッセージ群だから[0]?
+        message = str(messages[0])
+
+        # self.assertEqualを使うのでも可.
+        self.assertIn(f"{ self.user2.username }さんのフォローを解除しました。", message)
 
     def test_failure_post_with_not_exist_tweet(self):
         pass
