@@ -96,13 +96,13 @@ class FollowView(LoginRequiredMixin, TemplateView):
 
         # すでにフォローしている場合の処理を行う
         elif FriendShip.objects.filter(following=following, follower=follower).exists():
-            messages.warning(request, f"すでに { following.username } さんをフォローしています。")
+            messages.warning(request, f"すでに { following.username }さんをフォローしています。")
             return render(request, "accounts/follow.html")
 
         # 新しいフォロー関係を作成する(フォロー成功)
         else:
             FriendShip.objects.create(following=following, follower=follower)
-            messages.success(request, f"{ following.username } さんをフォローしました。")
+            messages.success(request, f"{ following.username }さんをフォローしました。")
 
             # フォロー後にユーザーをホーム画面にリダイレクトする
             # HttpResponseRedirectはURL自体を変えて画面を遷移させる
@@ -122,7 +122,7 @@ class UnFollowView(LoginRequiredMixin, TemplateView):
         # 特にif文においては、代入と評価を同時に行うことが出来るようになる。
         if friend := FriendShip.objects.filter(following=following, follower=follower):
             friend.delete()
-            messages.success(request, f"{ following.username } さんのフォローを解除しました。")
+            messages.success(request, f"{ following.username }さんのフォローを解除しました。")
             return HttpResponseRedirect(reverse_lazy("tweets:home"))
 
         else:
