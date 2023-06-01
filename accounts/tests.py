@@ -585,10 +585,65 @@ class TestUnfollowView(TestCase):
 
 
 class TestFollowingListView(TestCase):
+    def setUp(self):
+        self.user1 = CustomUser.objects.create_user(
+            username="testuser1",
+            password="testpassword1",
+            email="test1@example.com",
+        )
+
+        self.user2 = CustomUser.objects.create_user(
+            username="testuser2",
+            password="testpassword2",
+            email="test2@example.com",
+        )
+
+        self.client.login(username="testuser1", password="testpassword1")
+
+        # 他のユーザへのフォローリスト画面url文字列の逆引き
+        self.url = reverse(
+            "accounts:following_list", kwargs={"username": self.user2.username}
+        )  # urls.pyでstr:usernameとなっているのでキーはusernameになる。
+
+        # 他のユーザへのフォロワーリスト画面url文字列の逆引き
+        self.url = reverse(
+            "accounts:follower_list", kwargs={"username": self.user2.username}
+        )  # urls.pyでstr:usernameとなっているのでキーはusernameになる。
+
     def test_success_get(self):
-        pass
+        """
+        品質:該当ユーザーのフォロワー一覧を表示する。
+        効果:Response Status Code: 200
+        """
+        response = self.client.get(self.url)
+        self.assertEqual(response.status_code, 200)
 
 
 class TestFollowerListView(TestCase):
+    def setUp(self):
+        self.user1 = CustomUser.objects.create_user(
+            username="testuser1",
+            password="testpassword1",
+            email="test1@example.com",
+        )
+
+        self.user2 = CustomUser.objects.create_user(
+            username="testuser2",
+            password="testpassword2",
+            email="test2@example.com",
+        )
+
+        self.client.login(username="testuser1", password="testpassword1")
+
+        # 他のユーザへのフォロワーリスト画面url文字列の逆引き
+        self.url = reverse(
+            "accounts:follower_list", kwargs={"username": self.user2.username}
+        )  # urls.pyでstr:usernameとなっているのでキーはusernameになる。
+
     def test_success_get(self):
-        pass
+        """
+        品質:該当ユーザーのフォロー一覧を表示する。
+        効果:Response Status Code: 200
+        """
+        response = self.client.get(self.url)
+        self.assertEqual(response.status_code, 200)
