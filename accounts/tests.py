@@ -474,14 +474,14 @@ class TestFollowView(TestCase):
         """
         品質:自分自身に対して（フォローの）リクエスト送信
         効果:
-        ・Response Status Code: 200
+        ・Response Status Code: 400
         ・DBにレコードが追加されていない
         """
         self.assertEqual(FriendShip.objects.all().count(), 0)
 
         # 自分自身へのフォロー確認画面url文字列の逆引き
         response = self.client.post(reverse("accounts:follow", kwargs={"username": self.user1.username}), None)
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, 400)
         self.assertFalse(FriendShip.objects.exists())
 
         # 以下はメッセージのテスト
@@ -572,12 +572,12 @@ class TestUnfollowView(TestCase):
         """
         品質:自分自身に（フォロー解除の）リクエストを送信する
         効果:
-        ・Response Status Code: 200
+        ・Response Status Code: 400
         ・DBのデータが削除されていない
         """
         self.assertEqual(FriendShip.objects.all().count(), 1)
         response = self.client.post(reverse("accounts:unfollow", kwargs={"username": self.user1.username}), None)
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, 400)
         self.assertEqual(FriendShip.objects.all().count(), 1)
         messages = list(get_messages(response.wsgi_request))
         message = str(messages[0])
