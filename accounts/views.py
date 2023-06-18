@@ -2,11 +2,13 @@ from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth import authenticate, get_user_model, login
 from django.contrib.auth.mixins import LoginRequiredMixin
+from django.core.exceptions import BadRequest
 from django.db.models import Q
 from django.http import HttpResponseRedirect
 from django.shortcuts import get_object_or_404, render
 from django.urls import reverse_lazy
-from django.views.generic import CreateView, DetailView, ListView, TemplateView
+from django.views import View
+from django.views.generic import CreateView, DetailView, ListView
 
 from tweets.models import Tweet
 
@@ -72,10 +74,7 @@ class UserProfileView(LoginRequiredMixin, DetailView):
         return context
 
 
-class FollowView(LoginRequiredMixin, TemplateView):
-    template_name = "accounts/follow.html"
-    model = FriendShip
-
+class FollowView(LoginRequiredMixin, View):
     # HTTP POSTリクエストを処理。この時のリクエストはフォローをするという動作
     def post(self, request, *args, **kwargs):
         # リクエストを送信（フォロー申請）したユーザを格納
@@ -90,9 +89,10 @@ class FollowView(LoginRequiredMixin, TemplateView):
         if following == follower:
             # メッセージフレームワークによる様々なメッセージを出す
             messages.warning(request, "自分自身はフォローできません。")
+            raise BadRequest("Invalid request.")
 
             # 失敗したので特定の画面に戻す。メッセージを表示させるだけでURLを変更する必要はないのでレンダリングで戻す
-            return render(request, "accounts/follow.html")
+            # return render(request, "accounts/follow.html")
 
         # すでにフォローしている場合の処理を行う
         elif FriendShip.objects.filter(following=following, follower=follower).exists():
@@ -110,10 +110,7 @@ class FollowView(LoginRequiredMixin, TemplateView):
             return HttpResponseRedirect(reverse_lazy("tweets:home"))
 
 
-class UnFollowView(LoginRequiredMixin, TemplateView):
-    template_name = "accounts/unfollow.html"
-    model = FriendShip
-
+class UnFollowView(LoginRequiredMixin, View):
     def post(self, request, *args, **kwargs):
         follower = self.request.user
         following = get_object_or_404(CustomUser, username=self.kwargs["username"])
@@ -127,7 +124,8 @@ class UnFollowView(LoginRequiredMixin, TemplateView):
 
         else:
             messages.warning(request, "フォローしていない人や、自分自身をフォロー解除できません。")
-            return render(request, "accounts/unfollow.html")
+            raise BadRequest("Invalid request.")
+            # return render(request, "accounts/unfollow.html")
 
 
 class FollowingListView(LoginRequiredMixin, ListView):
