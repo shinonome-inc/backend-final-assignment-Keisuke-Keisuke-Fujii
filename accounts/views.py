@@ -97,7 +97,7 @@ class FollowView(LoginRequiredMixin, View):
         # すでにフォローしている場合の処理を行う
         elif FriendShip.objects.filter(following=following, follower=follower).exists():
             messages.warning(request, f"すでに { following.username }さんをフォローしています。")
-            return render(request, "accounts/follow.html")
+            return render(request, "tweets/home.html")
 
         # 新しいフォロー関係を作成する(フォロー成功)
         else:
