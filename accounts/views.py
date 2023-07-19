@@ -89,14 +89,13 @@ class FollowView(LoginRequiredMixin, View):
         if following == follower:
             # メッセージフレームワークによる様々なメッセージを出す
             messages.warning(request, "自分自身はフォローできません。")
+            # 以下の部分は400エラーを出すための例外(exception, エラー)
             raise BadRequest("Invalid request.")
-
-            # 失敗したので特定の画面に戻す。メッセージを表示させるだけでURLを変更する必要はないのでレンダリングで戻す
-            # return render(request, "accounts/follow.html")
 
         # すでにフォローしている場合の処理を行う
         elif FriendShip.objects.filter(following=following, follower=follower).exists():
             messages.warning(request, f"すでに { following.username }さんをフォローしています。")
+            # メッセージを表示させるだけなのでレンダリングで戻す
             return render(request, "tweets/home.html")
 
         # 新しいフォロー関係を作成する(フォロー成功)
@@ -106,7 +105,7 @@ class FollowView(LoginRequiredMixin, View):
 
             # フォロー後にユーザーをホーム画面にリダイレクトする
             # HttpResponseRedirectはURL自体を変えて画面を遷移させる
-            # renderはURLはそのままに画面表示内容(テンプレート)だけ書き変える。同じURLでmessageだけ表示しなおしたい時などに使う
+            # renderはURLはそのまま画面遷移(リダイレクト)せず画面表示内容(テンプレート)だけ書き変える。同じURLでmessageだけ表示しなおしたい時などに使う
             return HttpResponseRedirect(reverse_lazy("tweets:home"))
 
 
@@ -125,7 +124,6 @@ class UnFollowView(LoginRequiredMixin, View):
         else:
             messages.warning(request, "フォローしていない人や、自分自身をフォロー解除できません。")
             raise BadRequest("Invalid request.")
-            # return render(request, "accounts/unfollow.html")
 
 
 class FollowingListView(LoginRequiredMixin, ListView):
