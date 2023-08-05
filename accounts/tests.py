@@ -172,7 +172,6 @@ class TestSignupView(TestCase):
             "password2": "short",
         }
         response = self.client.post(self.url, too_short_password_data)
-        print(response)
         form = response.context["form"]
         self.assertEqual(response.status_code, 200)
         # 以下でCustomUserテーブルのレコードは増えていないことを確認.
