@@ -93,6 +93,7 @@ class FollowView(LoginRequiredMixin, View):
             raise BadRequest("Invalid request.")
 
         # すでにフォローしている場合の処理を行う
+        # get_or_created()を用いて以下の処理をより簡潔に書き直すこともできる
         elif FriendShip.objects.filter(following=following, follower=follower).exists():
             messages.warning(request, f"すでに { following.username }さんをフォローしています。")
             # メッセージを表示させるだけなのでレンダリングで戻す
