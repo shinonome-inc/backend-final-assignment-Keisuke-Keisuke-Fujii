@@ -1,9 +1,12 @@
 from django.conf import settings
 from django.contrib.auth import SESSION_KEY, get_user_model
+from django.contrib.messages import get_messages
 from django.test import TestCase
 from django.urls import reverse
 
 from tweets.models import Tweet
+
+from .models import FriendShip
 
 CustomUser = get_user_model()
 
@@ -22,17 +25,17 @@ class TestSignupView(TestCase):
         self.assertTemplateUsed(response, "accounts/signup.html")
 
     def test_success_post(self):
-        """
-        responseはユーザーがフォームにデータを打ち込んでユーザー登録ボタンを押し送信した操作
-        第二引数データdataを,第一引数のurlページであるself.url（SetUpメソッドで定めたsignupフォームのあるurl）にある
-        フォームで送る操作を示す
-        """
         data = {
             "username": "testuser",
             "email": "test@test.com",
             "password1": "testpassword",
             "password2": "testpassword",
         }
+        """
+        responseはユーザーがフォームにデータを打ち込んでユーザー登録ボタンを押し送信した操作
+        第二引数データdataを,第一引数のurlページであるself.url（SetUpメソッドで定めたsignupフォームのあるurl）にある
+        フォームで送る操作を示す
+        """
         response = self.client.post(self.url, data)
 
         # responseにより登録されたデータが存在していることを確認
@@ -169,7 +172,6 @@ class TestSignupView(TestCase):
             "password2": "short",
         }
         response = self.client.post(self.url, too_short_password_data)
-        print(response)
         form = response.context["form"]
         self.assertEqual(response.status_code, 200)
         # 以下でCustomUserテーブルのレコードは増えていないことを確認.
@@ -312,6 +314,7 @@ class TestUserLogoutView(TestCase):
             status_code=302,
             target_status_code=200,
         )
+        # ログアウトなのでセッションからログイン情報が消えている確認
         self.assertNotIn(SESSION_KEY, self.client.session)
 
 
@@ -324,7 +327,13 @@ class TestUserProfileView(TestCase):
             password="testpassword1",
             email="test1@example.com",
         )
-        # フォロー機能などで後々self.user2を作るらしい
+
+        # フォロー機能（フォロー数）テストのためself.user2を作る
+        self.user2 = CustomUser.objects.create_user(
+            username="testuser2",
+            password="testpassword2",
+            email="test2@example.com",
+        )
 
         # ログインさせる
         self.client.login(username="testuser1", password="testpassword1")
@@ -337,10 +346,22 @@ class TestUserProfileView(TestCase):
         # ツイート投稿させる
         Tweet.objects.create(user=self.user1, content="testpost")
 
+        # user1がuser2をフォローする
+        FriendShip.objects.create(follower=self.user1, following=self.user2)
+
+        # user2がuser1をフォローする
+        FriendShip.objects.create(follower=self.user2, following=self.user1)
+
     def test_success_get(self):
         """
-        該当ユーザーのツイート一覧取得
-        ・context内に含まれるツイート一覧が、DBに保存されている該当のユーザーのツイート一覧と同一である
+        ツイート機能テスト時
+        品質:該当ユーザーのツイート一覧取得
+        効果:context内に含まれるツイート一覧が、DBに保存されている該当のユーザーのツイート一覧と同一である
+
+        フォロー機能テスト時
+        品質:該当ユーザーのフォロー数・フォロワー数を表示する。
+        効果:context内に含まれるフォロー数とフォロワー数が
+        DBに保存されている該当のユーザーのフォロー数とフォロワー数に同一である
         """
         # ↓ユーザーがaccounts/<str:username>/ のURLに訪れているか確認
         response = self.client.get(self.url)  # プロフィールページURLに訪れる動作
@@ -351,10 +372,14 @@ class TestUserProfileView(TestCase):
         self.assertEqual(response.status_code, 200)  # コード200なのを確認
         self.assertTemplateUsed(response, "accounts/profile.html")  # プロフィールテンプレートhtmlが表示されているかを確認
         self.assertQuerysetEqual(context["tweet_list"], Tweet.objects.filter(user=self.user1))
+        self.assertEqual(context["following_count"], FriendShip.objects.filter(follower=self.user1).count())
+        self.assertEqual(context["follower_count"], FriendShip.objects.filter(following=self.user1).count())
         """
         レスポンスに想定通りのquerysetが含まれているか,全ユーザのツイート一覧とクエリが等しいか確認
         tweet_listはaccounts/views.UserProfileViewのget_context_data内のcontext[tweet_list]
         context["tweet_list"]はプロフィール画面で表示されるツイート一覧のコンテキスト形式
+        context["following_count"]はフォロー数
+        FriendShip.objects.filter(follower=self.user1).count()は自分がフォロワーになっているFriendShipモデルのオブジェクトの数
         """
 
 
@@ -373,32 +398,251 @@ class TestUserProfileEditView(TestCase):
 
 
 class TestFollowView(TestCase):
+    def setUp(self):
+        # ログイン後の画面なのでログイン用テストユーザ作成
+        # ログインするユーザのデータをモデルに追加して既存ユーザ扱いにする
+        self.user1 = CustomUser.objects.create_user(
+            username="testuser1",
+            password="testpassword1",
+            email="test1@example.com",
+        )
+
+        # フォロー機能（フォロー動作）テストのため同様にself.user2を作る
+        self.user2 = CustomUser.objects.create_user(
+            username="testuser2",
+            password="testpassword2",
+            email="test2@example.com",
+        )
+
+        # user1をログインさせる
+        self.client.login(username="testuser1", password="testpassword1")
+
+        # 他のユーザへのフォロー確認画面url文字列の逆引き
+        self.url = reverse(
+            "accounts:follow", kwargs={"username": self.user2.username}
+        )  # urls.pyでstr:usernameとなっているのでキーはusernameになる。
+
     def test_success_post(self):
-        pass
+        """
+        品質:リクエストを送信する
+        効果:
+        ・Response Status Code: 302
+        ・リダイレクト先のStatus Code: 200
+        ・(フォロー成功時に)Homeにリダイレクトしている
+        ・DBにデータが追加されている
+        """
+        self.assertEqual(FriendShip.objects.all().count(), 0)  # まずフォロー関係が一つもないことを確認
+
+        # フォローはフォーム送信で行うが、フォームに何か情報を入力したわけではないので第2引数はNone
+        response = self.client.post(self.url, None)
+
+        self.assertRedirects(
+            response,
+            reverse("tweets:home"),  # response(フォロー)成功後の画面遷移先
+            status_code=302,
+            target_status_code=200,
+        )
+
+        # following=self.user2.usernameではない。FriendShipモデルの該当フィールドに表示されるのはユーザのidのため
+        self.assertTrue(FriendShip.objects.filter(following=self.user2, follower=self.user1).exists())
+
+        # 以下はメッセージのテスト
+        messages = list(get_messages(response.wsgi_request))
+
+        # messages[1]だとエラー.list index out of range.同一メソッド内の最初のメッセージ群だから[0]?
+        message = str(messages[0])
+
+        # self.assertEqualを使うのでも可.
+        self.assertIn(f"{ self.user2.username }さんをフォローしました。", message)
+        self.assertIn(SESSION_KEY, self.client.session)
 
     def test_failure_post_with_not_exist_user(self):
-        pass
+        """
+        品質:存在しないユーザーに対して(フォローの)リクエストを送信する。
+        効果:
+        ・Response Status Code: 404
+        ・DBにレコードが追加されていない
+        """
+        # self.assertFalse(FriendShip.objects.exists())とself.assertEqual(FriendShip.objects.all().count(), 0)は実質同じ
+        self.assertEqual(FriendShip.objects.all().count(), 0)
+        response = self.client.post(reverse("accounts:follow", kwargs={"username": "not_exist_user"}), None)
+        self.assertEqual(response.status_code, 404)
+        self.assertFalse(FriendShip.objects.exists())
 
     def test_failure_post_with_self(self):
-        pass
+        """
+        品質:自分自身に対して（フォローの）リクエスト送信
+        効果:
+        ・Response Status Code: 400
+        ・DBにレコードが追加されていない
+        """
+        self.assertEqual(FriendShip.objects.all().count(), 0)
+
+        # 自分自身へのフォロー確認画面url文字列の逆引き
+        response = self.client.post(reverse("accounts:follow", kwargs={"username": self.user1.username}), None)
+        self.assertEqual(response.status_code, 400)
+        self.assertFalse(FriendShip.objects.exists())
+
+        # 以下はメッセージのテスト
+        messages = list(get_messages(response.wsgi_request))
+
+        # messages[1]だとエラー.list index out of range.同一メソッド内の最初のメッセージ群だから[0]?
+        message = str(messages[0])
+
+        # self.assertEqual(message, "自分自身はフォローできません。")でも可.
+        self.assertIn("自分自身はフォローできません。", message)
 
 
 class TestUnfollowView(TestCase):
+    def setUp(self):
+        # ログイン後の画面なのでログイン用テストユーザ作成
+        # ログインするユーザのデータをモデルに追加して既存ユーザ扱いにする
+        self.user1 = CustomUser.objects.create_user(
+            username="testuser1",
+            password="testpassword1",
+            email="test1@example.com",
+        )
+
+        # フォロー機能（フォロー動作）テストのため同様にself.user2を作る
+        self.user2 = CustomUser.objects.create_user(
+            username="testuser2",
+            password="testpassword2",
+            email="test2@example.com",
+        )
+
+        # user1をログインさせる
+        self.client.login(username="testuser1", password="testpassword1")
+
+        # 他のユーザへのフォロー解除確認画面url文字列の逆引き
+        self.url = reverse(
+            "accounts:unfollow", kwargs={"username": self.user2.username}
+        )  # urls.pyでstr:usernameとなっているのでキーはusernameになる。
+
+        # user1がuser2をフォローする
+        FriendShip.objects.create(follower=self.user1, following=self.user2)
+
     def test_success_post(self):
-        pass
+        """
+        品質:（フォロー解除）リクエストを送信する
+        効果:
+        ・Response Status Code: 302
+        ・リダイレクト先のStatus Code: 200
+        ・（フォロー解除成功時に）Homeにリダイレクトしている
+        ・DBのデータが削除されている
+        """
+
+        # まずuser1がuser2をフォロー中であることを確認
+        self.assertTrue(FriendShip.objects.filter(following=self.user2, follower=self.user1).exists())
+
+        # フォローはフォーム送信で行うが、フォームに何か情報を入力したわけではないので第2引数はNone
+        response = self.client.post(self.url, None)
+
+        self.assertRedirects(
+            response,
+            reverse("tweets:home"),  # response(フォロー)成功後の画面遷移先
+            status_code=302,
+            target_status_code=200,
+        )
+        self.assertFalse(FriendShip.objects.filter(following=self.user2, follower=self.user1).exists())
+        self.assertIn(SESSION_KEY, self.client.session)
+
+        # 以下はメッセージのテスト
+        messages = list(get_messages(response.wsgi_request))
+
+        # messages[1]だとエラー.list index out of range.同一メソッド内の最初のメッセージ群だから[0]?
+        message = str(messages[0])
+
+        # self.assertEqualを使うのでも可.
+        self.assertIn(f"{ self.user2.username }さんのフォローを解除しました。", message)
 
     def test_failure_post_with_not_exist_tweet(self):
-        pass
+        """
+        品質:存在しないユーザに対して（フォロー解除の）リクエストを送信する
+        効果:
+        ・Response Status Code: 404
+        ・DBのデータが削除されていない
+        """
+        self.assertEqual(FriendShip.objects.all().count(), 1)
+        response = self.client.post(reverse("accounts:unfollow", kwargs={"username": "not_exist_user"}), None)
+        self.assertEqual(response.status_code, 404)
+        self.assertEqual(FriendShip.objects.all().count(), 1)
 
-    def test_failure_post_with_incorrect_user(self):
-        pass
+    def test_failure_post_with_self(self):
+        """
+        品質:自分自身に（フォロー解除の）リクエストを送信する
+        効果:
+        ・Response Status Code: 400
+        ・DBのデータが削除されていない
+        """
+        self.assertEqual(FriendShip.objects.all().count(), 1)
+        response = self.client.post(reverse("accounts:unfollow", kwargs={"username": self.user1.username}), None)
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(FriendShip.objects.all().count(), 1)
+        messages = list(get_messages(response.wsgi_request))
+        message = str(messages[0])
+        self.assertIn("フォローしていない人や、自分自身をフォロー解除できません。", message)
 
 
 class TestFollowingListView(TestCase):
+    def setUp(self):
+        self.user1 = CustomUser.objects.create_user(
+            username="testuser1",
+            password="testpassword1",
+            email="test1@example.com",
+        )
+
+        self.user2 = CustomUser.objects.create_user(
+            username="testuser2",
+            password="testpassword2",
+            email="test2@example.com",
+        )
+
+        self.client.login(username="testuser1", password="testpassword1")
+
+        # 他のユーザへのフォローリスト画面url文字列の逆引き
+        self.url = reverse(
+            "accounts:following_list", kwargs={"username": self.user2.username}
+        )  # urls.pyでstr:usernameとなっているのでキーはusernameになる。
+
+        # 他のユーザへのフォロワーリスト画面url文字列の逆引き
+        self.url = reverse(
+            "accounts:follower_list", kwargs={"username": self.user2.username}
+        )  # urls.pyでstr:usernameとなっているのでキーはusernameになる。
+
     def test_success_get(self):
-        pass
+        """
+        品質:該当ユーザーのフォロワー一覧を表示する。
+        効果:Response Status Code: 200
+        """
+        response = self.client.get(self.url)
+        self.assertEqual(response.status_code, 200)
 
 
 class TestFollowerListView(TestCase):
+    def setUp(self):
+        self.user1 = CustomUser.objects.create_user(
+            username="testuser1",
+            password="testpassword1",
+            email="test1@example.com",
+        )
+
+        self.user2 = CustomUser.objects.create_user(
+            username="testuser2",
+            password="testpassword2",
+            email="test2@example.com",
+        )
+
+        self.client.login(username="testuser1", password="testpassword1")
+
+        # 他のユーザへのフォロワーリスト画面url文字列の逆引き
+        self.url = reverse(
+            "accounts:follower_list", kwargs={"username": self.user2.username}
+        )  # urls.pyでstr:usernameとなっているのでキーはusernameになる。
+
     def test_success_get(self):
-        pass
+        """
+        品質:該当ユーザーのフォロー一覧を表示する。
+        効果:Response Status Code: 200
+        """
+        response = self.client.get(self.url)
+        self.assertEqual(response.status_code, 200)

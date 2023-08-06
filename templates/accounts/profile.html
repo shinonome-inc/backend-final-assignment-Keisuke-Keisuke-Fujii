@@ -5,7 +5,40 @@
 {% block content %}
 <div>
     <h1>{{ profile.username }}のプロフィール</h1>
+    <p><a href="{% url 'accounts:following_list' profile.username %}">フォロー数：{{ following_count }}</a></p>
+    <p><a href="{% url 'accounts:follower_list' profile.username %}">フォロワー数：{{ follower_count }}</a></p>
+
+    {% if profile.username == user.username %}
+    <p>ここはあなた自身のプロフィール画面です。</p>
+
+    {% elif mutual_follow %}
+    <p>相互フォロー</p>
+    <form action="{% url 'accounts:unfollow' profile.username %}" method="post">
+        {% csrf_token %}
+        <button type="submit">フォロー解除</button>
+    </form>
+    {% elif login_user_follows_template_user %}
+    <p>フォロー中</p>
+    <form action="{% url 'accounts:unfollow' profile.username %}" method="post">
+        {% csrf_token %}
+        <button type="submit">フォロー解除</button>
+    </form>
+
+    {% elif template_user_follows_login_user %}
+    <p>フォローされています</p>
+    <form action="{% url 'accounts:follow' profile.username %}" method="post">
+        {% csrf_token %}
+        <button type="submit">フォロー</button>
+    </form>
+
+    {% else %}
+    <form action="{% url 'accounts:follow' profile.username %}" method="post">
+        {% csrf_token %}
+        <button type="submit">フォロー</button>
+    </form>
+    {% endif %}
 </div>
+
 {% if tweet_list %}
 {% for tweet in tweet_list %}
 <div>
